@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/dns"
+	"github.com/DataWerx/datawerx-mesh/pkg/dns"
 )
 
 func keys(specs ...string) []dns.ServiceKey {

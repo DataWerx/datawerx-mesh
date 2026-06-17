@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/datawerx/datawerx/internal/meshstate"
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/internal/meshstate"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 // runSnapshot emits the versioned, machine-readable mesh state snapshot as JSON.

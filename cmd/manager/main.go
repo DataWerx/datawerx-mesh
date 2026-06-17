@@ -10,7 +10,7 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/datawerx/datawerx/pkg/agent"
+	"github.com/DataWerx/datawerx-mesh/pkg/agent"
 )
 
 func main() {

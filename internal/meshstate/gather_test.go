@@ -13,9 +13,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
-	mcsv1alpha1 "github.com/datawerx/datawerx/pkg/apis/multicluster/v1alpha1"
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
-	"github.com/datawerx/datawerx/pkg/verify"
+	mcsv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/multicluster/v1alpha1"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 // newFakeClient builds a client over the package scheme seeded with objs, so the

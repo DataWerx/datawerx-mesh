@@ -4,10 +4,10 @@ import (
 	"strings"
 	"testing"
 
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
-	"github.com/datawerx/datawerx/pkg/impact"
-	"github.com/datawerx/datawerx/pkg/meshfw"
-	"github.com/datawerx/datawerx/pkg/topology"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
+	"github.com/DataWerx/datawerx-mesh/pkg/impact"
+	"github.com/DataWerx/datawerx-mesh/pkg/meshfw"
+	"github.com/DataWerx/datawerx-mesh/pkg/topology"
 )
 
 func clusterCIDRs() map[string][]string {

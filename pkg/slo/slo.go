@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"sort"
 
-	"github.com/datawerx/datawerx/pkg/reach"
+	"github.com/DataWerx/datawerx-mesh/pkg/reach"
 )
 
 const (

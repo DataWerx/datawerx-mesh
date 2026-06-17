@@ -9,9 +9,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	mcsv1alpha1 "github.com/datawerx/datawerx/pkg/apis/multicluster/v1alpha1"
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
-	dwxdns "github.com/datawerx/datawerx/pkg/dns"
+	mcsv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/multicluster/v1alpha1"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
+	dwxdns "github.com/DataWerx/datawerx-mesh/pkg/dns"
 )
 
 // CachedResolver answers clusterset.local lookups from ServiceImport and

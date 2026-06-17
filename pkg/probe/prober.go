@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-logr/logr"
 
-	dwxmetrics "github.com/datawerx/datawerx/pkg/metrics"
+	dwxmetrics "github.com/DataWerx/datawerx-mesh/pkg/metrics"
 )
 
 const (

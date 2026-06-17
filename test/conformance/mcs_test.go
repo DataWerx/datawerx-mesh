@@ -10,8 +10,8 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/yaml"
 
-	mcsv1alpha1 "github.com/datawerx/datawerx/pkg/apis/multicluster/v1alpha1"
-	"github.com/datawerx/datawerx/pkg/dns"
+	mcsv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/multicluster/v1alpha1"
+	"github.com/DataWerx/datawerx-mesh/pkg/dns"
 )
 
 // KEP-1645 §"ServiceExport": exporting is a marker on a Service of the same

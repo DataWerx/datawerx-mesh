@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/datawerx/datawerx/pkg/nat"
+	"github.com/DataWerx/datawerx-mesh/pkg/nat"
 )
 
 // MapOps is the seam over the kernel BPF maps. The premium build supplies a

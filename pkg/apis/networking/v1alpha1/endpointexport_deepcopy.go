@@ -6,7 +6,7 @@
 package v1alpha1
 
 import (
-	mcsv1alpha1 "github.com/datawerx/datawerx/pkg/apis/multicluster/v1alpha1"
+	mcsv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/multicluster/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 

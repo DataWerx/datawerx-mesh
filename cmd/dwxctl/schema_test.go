@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/meshgraph"
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/pkg/meshgraph"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 // updateGolden rewrites the committed schema files instead of asserting against

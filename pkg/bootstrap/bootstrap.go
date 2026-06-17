@@ -23,8 +23,8 @@ import (
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
-	"github.com/datawerx/datawerx/pkg/topology"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
+	"github.com/DataWerx/datawerx-mesh/pkg/topology"
 )
 
 const (

@@ -40,7 +40,7 @@ Release images are built reproducibly (`-trimpath`), published with an **SBOM**
 
 ```sh
 cosign verify <image> \
-  --certificate-identity-regexp 'https://github.com/datawerx/datawerx/.*' \
+  --certificate-identity-regexp 'https://github.com/DataWerx/datawerx-mesh/.*' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 

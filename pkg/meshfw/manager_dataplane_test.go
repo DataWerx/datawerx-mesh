@@ -18,7 +18,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/vishvananda/netns"
 
-	"github.com/datawerx/datawerx/pkg/meshfw"
+	"github.com/DataWerx/datawerx-mesh/pkg/meshfw"
 )
 
 func TestManager_FirewallDataPlane(t *testing.T) {

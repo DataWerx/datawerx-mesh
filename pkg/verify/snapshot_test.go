@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 func fullSnapshotInputs() verify.SnapshotInputs {

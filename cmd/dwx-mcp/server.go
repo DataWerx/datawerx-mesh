@@ -11,8 +11,8 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/datawerx/datawerx/internal/meshstate"
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/internal/meshstate"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 // protocolVersion is the MCP revision this server speaks.

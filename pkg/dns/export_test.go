@@ -6,8 +6,8 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	mcsv1alpha1 "github.com/datawerx/datawerx/pkg/apis/multicluster/v1alpha1"
-	"github.com/datawerx/datawerx/pkg/dns"
+	mcsv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/multicluster/v1alpha1"
+	"github.com/DataWerx/datawerx-mesh/pkg/dns"
 )
 
 func strptr(s string) *string { return &s }

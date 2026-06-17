@@ -14,8 +14,8 @@ Use our batteries-included built-in overlay
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Free forever](https://img.shields.io/badge/core-free%20forever-brightgreen.svg)](COMMITMENT.md)
-[![CI](https://github.com/datawerx/datawerx/actions/workflows/ci.yml/badge.svg)](https://github.com/datawerx/datawerx/actions/workflows/ci.yml)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/datawerx/datawerx/badge)](https://scorecard.dev/viewer/?uri=github.com/datawerx/datawerx)
+[![CI](https://github.com/DataWerx/datawerx-mesh/actions/workflows/ci.yml/badge.svg)](https://github.com/DataWerx/datawerx-mesh/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/DataWerx/datawerx-mesh/badge)](https://scorecard.dev/viewer/?uri=github.com/DataWerx/datawerx-mesh)
 [![Go 1.26](https://img.shields.io/badge/Go-1.26-00ADD8.svg)](https://go.dev)
 
 

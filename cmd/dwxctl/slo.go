@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/datawerx/datawerx/internal/meshstate"
-	"github.com/datawerx/datawerx/pkg/slo"
+	"github.com/DataWerx/datawerx-mesh/internal/meshstate"
+	"github.com/DataWerx/datawerx-mesh/pkg/slo"
 )
 
 // runSLO reports the connectivity golden signals: for each remote cluster, it

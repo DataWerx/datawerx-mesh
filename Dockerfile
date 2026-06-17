@@ -21,7 +21,7 @@ ARG TARGETARCH=amd64
 ARG VERSION=dev
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
     go build -trimpath \
-    -ldflags="-s -w -X github.com/datawerx/datawerx/pkg/logging.Version=${VERSION}" \
+    -ldflags="-s -w -X github.com/DataWerx/datawerx-mesh/pkg/logging.Version=${VERSION}" \
     -o /out/dwx-manager ./cmd/manager
 
 # runtime stage 

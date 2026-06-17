@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"sort"
 
-	"github.com/datawerx/datawerx/pkg/meshfw"
+	"github.com/DataWerx/datawerx-mesh/pkg/meshfw"
 )
 
 const (

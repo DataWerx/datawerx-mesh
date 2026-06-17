@@ -31,7 +31,7 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
 )
 
 // EnterpriseSSOTokenEnv is the environment variable that carries the machine

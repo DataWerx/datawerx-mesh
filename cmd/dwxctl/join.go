@@ -13,8 +13,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
-	"github.com/datawerx/datawerx/pkg/bootstrap"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
+	"github.com/DataWerx/datawerx-mesh/pkg/bootstrap"
 )
 
 // runJoin implements the two halves of a zero-friction peering:

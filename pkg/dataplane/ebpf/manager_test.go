@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/datawerx/datawerx/pkg/dataplane/ebpf"
-	"github.com/datawerx/datawerx/pkg/nat"
+	"github.com/DataWerx/datawerx-mesh/pkg/dataplane/ebpf"
+	"github.com/DataWerx/datawerx-mesh/pkg/nat"
 )
 
 // fakeMapOps is an in-memory MapOps that records operation counts so tests can

@@ -20,7 +20,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/datawerx/datawerx/pkg/slo"
+	"github.com/DataWerx/datawerx-mesh/pkg/slo"
 )
 
 // Peer is a remote cluster's probe-relevant state. It mirrors reach.Peer but

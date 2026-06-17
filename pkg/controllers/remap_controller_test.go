@@ -14,11 +14,11 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/testutil"
 
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
-	"github.com/datawerx/datawerx/pkg/controllers"
-	dwxmetrics "github.com/datawerx/datawerx/pkg/metrics"
-	"github.com/datawerx/datawerx/pkg/nat"
-	"github.com/datawerx/datawerx/pkg/topology"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
+	"github.com/DataWerx/datawerx-mesh/pkg/controllers"
+	dwxmetrics "github.com/DataWerx/datawerx-mesh/pkg/metrics"
+	"github.com/DataWerx/datawerx-mesh/pkg/nat"
+	"github.com/DataWerx/datawerx-mesh/pkg/topology"
 )
 
 // TestReconcile_OverlapRemapRoutesVirtual: with remap enabled, an overlapping

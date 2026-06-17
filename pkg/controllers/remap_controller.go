@@ -9,10 +9,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
-	dwxmetrics "github.com/datawerx/datawerx/pkg/metrics"
-	"github.com/datawerx/datawerx/pkg/nat"
-	"github.com/datawerx/datawerx/pkg/topology"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
+	dwxmetrics "github.com/DataWerx/datawerx-mesh/pkg/metrics"
+	"github.com/DataWerx/datawerx-mesh/pkg/nat"
+	"github.com/DataWerx/datawerx-mesh/pkg/topology"
 )
 
 // RemapDataPlane programs the overlapping-CIDR NETMAP rules. Depending on the

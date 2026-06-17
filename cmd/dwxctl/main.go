@@ -24,8 +24,8 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/datawerx/datawerx/internal/meshstate"
-	"github.com/datawerx/datawerx/pkg/logging"
+	"github.com/DataWerx/datawerx-mesh/internal/meshstate"
+	"github.com/DataWerx/datawerx-mesh/pkg/logging"
 )
 
 func main() {

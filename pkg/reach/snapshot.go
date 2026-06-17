@@ -1,8 +1,8 @@
 package reach
 
 import (
-	"github.com/datawerx/datawerx/pkg/meshfw"
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/pkg/meshfw"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 // FromSnapshot builds the reachability matrix from a mesh snapshot, so the

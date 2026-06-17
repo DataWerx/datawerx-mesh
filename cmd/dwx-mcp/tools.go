@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/datawerx/datawerx/pkg/meshgraph"
-	"github.com/datawerx/datawerx/pkg/reach"
-	"github.com/datawerx/datawerx/pkg/slo"
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/pkg/meshgraph"
+	"github.com/DataWerx/datawerx-mesh/pkg/reach"
+	"github.com/DataWerx/datawerx-mesh/pkg/slo"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 // tool is one read-only MCP tool. run derives its answer purely from a gathered

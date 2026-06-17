@@ -3,7 +3,7 @@ package dns_test
 import (
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/dns"
+	"github.com/DataWerx/datawerx-mesh/pkg/dns"
 )
 
 func TestInClusterSetZone(t *testing.T) {

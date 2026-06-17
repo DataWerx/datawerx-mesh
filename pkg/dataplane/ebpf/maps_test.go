@@ -3,8 +3,8 @@ package ebpf_test
 import (
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/dataplane/ebpf"
-	"github.com/datawerx/datawerx/pkg/nat"
+	"github.com/DataWerx/datawerx-mesh/pkg/dataplane/ebpf"
+	"github.com/DataWerx/datawerx-mesh/pkg/nat"
 )
 
 func TestBuildRemapMaps_BidirectionalAndExact(t *testing.T) {

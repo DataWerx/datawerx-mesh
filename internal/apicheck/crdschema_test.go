@@ -10,8 +10,8 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/yaml"
 
-	mcsv1alpha1 "github.com/datawerx/datawerx/pkg/apis/multicluster/v1alpha1"
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
+	mcsv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/multicluster/v1alpha1"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
 )
 
 // crdCase pairs a Go root type with the hand-written CRD YAML that must describe
@@ -35,7 +35,7 @@ func crdCases() []crdCase {
 // (where a new field is our responsibility to add to the CRD) but treat external
 // types (metav1, corev1) as leaves — their internal fields are not our schema's
 // concern.
-const apiPkgPrefix = "github.com/datawerx/datawerx/pkg/apis"
+const apiPkgPrefix = "github.com/DataWerx/datawerx-mesh/pkg/apis"
 
 // TestCRDSchemaCoversEveryGoField asserts that every JSON field name on a CRD's
 // Go type appears as a property somewhere in its hand-written CRD schema. It is

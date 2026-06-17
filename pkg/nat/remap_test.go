@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/nat"
+	"github.com/DataWerx/datawerx-mesh/pkg/nat"
 )
 
 func TestBuildRemapRules(t *testing.T) {

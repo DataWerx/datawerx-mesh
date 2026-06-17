@@ -1,4 +1,4 @@
-module github.com/datawerx/datawerx
+module github.com/DataWerx/datawerx-mesh
 
 go 1.26.0
 

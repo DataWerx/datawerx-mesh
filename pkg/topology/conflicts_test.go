@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/topology"
+	"github.com/DataWerx/datawerx-mesh/pkg/topology"
 )
 
 func reasons(cs []topology.TopologyConflict) string {

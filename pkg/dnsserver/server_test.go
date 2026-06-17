@@ -8,8 +8,8 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/miekg/dns"
 
-	mcsv1alpha1 "github.com/datawerx/datawerx/pkg/apis/multicluster/v1alpha1"
-	dwxdns "github.com/datawerx/datawerx/pkg/dns"
+	mcsv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/multicluster/v1alpha1"
+	dwxdns "github.com/DataWerx/datawerx-mesh/pkg/dns"
 )
 
 // fakeResolver is a map-backed Resolver keyed by "ns/name".

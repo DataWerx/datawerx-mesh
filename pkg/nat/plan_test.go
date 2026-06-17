@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/nat"
+	"github.com/DataWerx/datawerx-mesh/pkg/nat"
 )
 
 // argValuesAfter returns, in rule order, the argument immediately following each

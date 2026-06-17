@@ -17,7 +17,7 @@ import (
 	"net"
 	"strings"
 
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
 )
 
 // Plan is the computed desired state for a single peer. It is the deterministic

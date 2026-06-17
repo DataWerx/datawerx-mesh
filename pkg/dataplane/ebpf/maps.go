@@ -24,7 +24,7 @@ import (
 	"net"
 	"sort"
 
-	"github.com/datawerx/datawerx/pkg/nat"
+	"github.com/DataWerx/datawerx-mesh/pkg/nat"
 )
 
 // TrieKey is the key layout of the LPM-trie BPF maps: a prefix length followed

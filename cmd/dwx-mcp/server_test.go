@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 // fakeSnapshot is a small but representative snapshot: one Error peer with an

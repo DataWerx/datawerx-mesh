@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
 )
 
 func TestMeshPeerSpec_AllCIDRs(t *testing.T) {

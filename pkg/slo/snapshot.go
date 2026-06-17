@@ -1,8 +1,8 @@
 package slo
 
 import (
-	"github.com/datawerx/datawerx/pkg/reach"
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/pkg/reach"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 // FromSnapshot builds the connectivity report from a mesh snapshot. The expected

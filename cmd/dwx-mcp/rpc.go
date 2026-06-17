@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 
-	"github.com/datawerx/datawerx/pkg/logging"
+	"github.com/DataWerx/datawerx-mesh/pkg/logging"
 )
 
 // JSON-RPC 2.0 error codes used by this server.

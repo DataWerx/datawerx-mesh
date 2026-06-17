@@ -21,7 +21,7 @@ import (
 	"golang.zx2c4.com/wireguard/wgctrl"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 
-	"github.com/datawerx/datawerx/pkg/wg"
+	"github.com/DataWerx/datawerx-mesh/pkg/wg"
 )
 
 func TestWireGuardManager_DataPlane(t *testing.T) {

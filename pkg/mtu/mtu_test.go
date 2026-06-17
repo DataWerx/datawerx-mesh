@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/datawerx/datawerx/pkg/mtu"
+	"github.com/DataWerx/datawerx-mesh/pkg/mtu"
 )
 
 func TestBuildClampRules(t *testing.T) {

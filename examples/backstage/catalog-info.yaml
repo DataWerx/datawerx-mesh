@@ -21,10 +21,10 @@ metadata:
     - wireguard
     - mcs
   links:
-    - url: https://github.com/datawerx/datawerx
+    - url: https://github.com/DataWerx/datawerx-mesh
       title: Source
       icon: github
-    - url: https://github.com/datawerx/datawerx/tree/main/docs
+    - url: https://github.com/DataWerx/datawerx-mesh/tree/main/docs
       title: Documentation
       icon: docs
 spec:

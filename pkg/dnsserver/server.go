@@ -18,8 +18,8 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/miekg/dns"
 
-	dwxdns "github.com/datawerx/datawerx/pkg/dns"
-	dwxmetrics "github.com/datawerx/datawerx/pkg/metrics"
+	dwxdns "github.com/DataWerx/datawerx-mesh/pkg/dns"
+	dwxmetrics "github.com/DataWerx/datawerx-mesh/pkg/metrics"
 )
 
 // defaultTTL is the record TTL in seconds. Kept short so imported-service

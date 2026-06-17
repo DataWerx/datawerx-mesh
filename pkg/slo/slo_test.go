@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/reach"
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/pkg/reach"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 const stale = verify.StaleHandshakeSeconds // 300

@@ -19,7 +19,7 @@ builds:
     flags: [-trimpath]
     ldflags:
       - -s -w
-      - -X github.com/datawerx/datawerx/pkg/logging.Version={{ .Version }}
+      - -X github.com/DataWerx/datawerx-mesh/pkg/logging.Version={{ .Version }}
 
   - id: dwx-mcp
     main: ./cmd/dwx-mcp
@@ -30,7 +30,7 @@ builds:
     flags: [-trimpath]
     ldflags:
       - -s -w
-      - -X github.com/datawerx/datawerx/pkg/logging.Version={{ .Version }}
+      - -X github.com/DataWerx/datawerx-mesh/pkg/logging.Version={{ .Version }}
 
 archives:
   - id: cli
@@ -70,7 +70,7 @@ homebrew_casks:
       owner: datawerx
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    homepage: "https://github.com/datawerx/datawerx"
+    homepage: "https://github.com/DataWerx/datawerx-mesh"
     description: "DataWerx Mesh operator CLI (dwxctl) and read-only MCP server (dwx-mcp)"
     license: "Apache-2.0"
     # Skip the tap commit on a snapshot/dirty build so `goreleaser --snapshot`
@@ -89,7 +89,7 @@ release:
   footer: |
     ## Install
 
-    See [docs/install.md](https://github.com/datawerx/datawerx/blob/main/docs/install.md)
+    See [docs/install.md](https://github.com/DataWerx/datawerx-mesh/blob/main/docs/install.md)
     for Homebrew, direct download, cosign verification, and the `dwx-mcp` MCP
     server setup.
 

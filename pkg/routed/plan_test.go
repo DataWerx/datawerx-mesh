@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/routed"
+	"github.com/DataWerx/datawerx-mesh/pkg/routed"
 )
 
 func TestPlanRoutes_SortedDedupedAndScoped(t *testing.T) {

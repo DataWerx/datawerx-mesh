@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/datawerx/datawerx/internal/meshstate"
-	"github.com/datawerx/datawerx/pkg/meshgraph"
+	"github.com/DataWerx/datawerx-mesh/internal/meshstate"
+	"github.com/DataWerx/datawerx-mesh/pkg/meshgraph"
 )
 
 // runGraph renders the mesh dependency graph: this cluster, the clusters it

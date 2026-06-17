@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/topology"
+	"github.com/DataWerx/datawerx-mesh/pkg/topology"
 )
 
 func mustParseCIDR(t *testing.T, s string) *net.IPNet {

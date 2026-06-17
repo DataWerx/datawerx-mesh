@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/dns"
+	"github.com/DataWerx/datawerx-mesh/pkg/dns"
 )
 
 // FuzzParseClusterSetName feeds arbitrary query names to the clusterset.local

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/meshfw"
+	"github.com/DataWerx/datawerx-mesh/pkg/meshfw"
 )
 
 // joinRules renders a ruleset's FWChain into comparable "chain: args" lines.

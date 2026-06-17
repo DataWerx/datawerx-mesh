@@ -92,5 +92,5 @@ that ships it.
   Scorecard, Dependabot, Go native fuzzing of the parsers, and SHA-pinned GitHub
   Actions. Reporting policy and an operator hardening checklist in `SECURITY.md`.
 
-[Unreleased]: https://github.com/datawerx/datawerx/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/datawerx/datawerx/releases/tag/v0.1.0
+[Unreleased]: https://github.com/DataWerx/datawerx-mesh/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/DataWerx/datawerx-mesh/releases/tag/v0.1.0

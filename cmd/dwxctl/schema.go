@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/datawerx/datawerx/pkg/contract"
-	"github.com/datawerx/datawerx/pkg/meshgraph"
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/pkg/contract"
+	"github.com/DataWerx/datawerx-mesh/pkg/meshgraph"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 // The mesh's two published data contracts and their JSON Schema titles. The

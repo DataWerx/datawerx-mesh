@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	networkingv1alpha1 "github.com/datawerx/datawerx/pkg/apis/networking/v1alpha1"
+	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
 )
 
 // TestJoinFormsMesh proves the zero-friction join (design 0006) end to end: it

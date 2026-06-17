@@ -17,7 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/datawerx/datawerx/pkg/topology"
+	"github.com/DataWerx/datawerx-mesh/pkg/topology"
 )
 
 const (

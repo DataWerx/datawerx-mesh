@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	mcsv1alpha1 "github.com/datawerx/datawerx/pkg/apis/multicluster/v1alpha1"
-	"github.com/datawerx/datawerx/pkg/dns"
+	mcsv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/multicluster/v1alpha1"
+	"github.com/DataWerx/datawerx-mesh/pkg/dns"
 )
 
 func TestGroupExports(t *testing.T) {

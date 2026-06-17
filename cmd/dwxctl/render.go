@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/datawerx/datawerx/pkg/impact"
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/pkg/impact"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 // jsonMarshal renders v as indented JSON for the --output json paths.

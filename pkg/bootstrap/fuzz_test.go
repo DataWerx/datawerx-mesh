@@ -3,7 +3,7 @@ package bootstrap_test
 import (
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/bootstrap"
+	"github.com/DataWerx/datawerx-mesh/pkg/bootstrap"
 )
 
 // validKey is a parseable (all-zero) 32-byte Curve25519 public key in base64.

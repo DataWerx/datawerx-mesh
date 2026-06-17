@@ -79,7 +79,7 @@ const (
 
 // Version is the build version, overridable at link time with
 //
-//	-ldflags "-X github.com/datawerx/datawerx/pkg/logging.Version=v1.2.3"
+//	-ldflags "-X github.com/DataWerx/datawerx-mesh/pkg/logging.Version=v1.2.3"
 //
 // When left at "dev", LogStartup falls back to the module version embedded by
 // the Go toolchain (debug.ReadBuildInfo).

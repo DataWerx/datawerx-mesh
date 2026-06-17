@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/topology"
+	"github.com/DataWerx/datawerx-mesh/pkg/topology"
 )
 
 // dnsName matches a legal RFC 1123 subdomain — the shape a Kubernetes object

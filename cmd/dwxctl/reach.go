@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/datawerx/datawerx/internal/meshstate"
-	"github.com/datawerx/datawerx/pkg/reach"
+	"github.com/DataWerx/datawerx-mesh/internal/meshstate"
+	"github.com/DataWerx/datawerx-mesh/pkg/reach"
 )
 
 // runReach reports the expected cross-cluster reachability into this cluster:

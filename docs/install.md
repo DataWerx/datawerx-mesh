@@ -22,7 +22,7 @@ The formula installs both `dwxctl` and `dwx-mcp`.
 ## Direct download
 
 Grab the archive for your platform from the
-[latest release](https://github.com/datawerx/datawerx/releases/latest),
+[latest release](https://github.com/DataWerx/datawerx-mesh/releases/latest),
 extract it, and put the binaries on your `PATH`:
 
 ```sh
@@ -40,7 +40,7 @@ The `checksums.txt` is signed, so verifying it covers every archive:
 cosign verify-blob \
   --certificate checksums.txt.pem \
   --signature checksums.txt.sig \
-  --certificate-identity-regexp 'https://github.com/datawerx/datawerx' \
+  --certificate-identity-regexp 'https://github.com/DataWerx/datawerx-mesh' \
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
   checksums.txt
 

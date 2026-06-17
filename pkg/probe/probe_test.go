@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/datawerx/datawerx/pkg/probe"
-	"github.com/datawerx/datawerx/pkg/reach"
-	"github.com/datawerx/datawerx/pkg/slo"
+	"github.com/DataWerx/datawerx-mesh/pkg/probe"
+	"github.com/DataWerx/datawerx-mesh/pkg/reach"
+	"github.com/DataWerx/datawerx-mesh/pkg/slo"
 )
 
 func TestNextProbeStatus(t *testing.T) {

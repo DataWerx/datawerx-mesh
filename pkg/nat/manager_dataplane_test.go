@@ -18,7 +18,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/vishvananda/netns"
 
-	"github.com/datawerx/datawerx/pkg/nat"
+	"github.com/DataWerx/datawerx-mesh/pkg/nat"
 )
 
 func TestManager_DataPlane(t *testing.T) {

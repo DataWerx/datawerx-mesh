@@ -6,7 +6,7 @@ import (
 
 	discoveryv1 "k8s.io/api/discovery/v1"
 
-	"github.com/datawerx/datawerx/pkg/dns"
+	"github.com/DataWerx/datawerx-mesh/pkg/dns"
 )
 
 func boolp(b bool) *bool { return &b }

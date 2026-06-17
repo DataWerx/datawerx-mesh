@@ -18,7 +18,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/vishvananda/netns"
 
-	"github.com/datawerx/datawerx/pkg/mtu"
+	"github.com/DataWerx/datawerx-mesh/pkg/mtu"
 )
 
 func TestManager_ClampDataPlane(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 // sampleSnapshot is a representative two-peer mesh: a healthy peer that serves an

@@ -18,7 +18,7 @@ import (
 	"github.com/vishvananda/netlink"
 	"github.com/vishvananda/netns"
 
-	"github.com/datawerx/datawerx/pkg/routed"
+	"github.com/DataWerx/datawerx-mesh/pkg/routed"
 )
 
 func TestManager_RoutedDataPlane(t *testing.T) {

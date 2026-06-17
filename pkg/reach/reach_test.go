@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/meshfw"
-	"github.com/datawerx/datawerx/pkg/verify"
+	"github.com/DataWerx/datawerx-mesh/pkg/meshfw"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 )
 
 func find(m Matrix, cluster string) (Reachability, bool) {

@@ -15,9 +15,9 @@ keywords:
   - networking
   - mcs
   - service-discovery
-home: https://github.com/datawerx/datawerx
+home: https://github.com/DataWerx/datawerx-mesh
 sources:
-  - https://github.com/datawerx/datawerx
+  - https://github.com/DataWerx/datawerx-mesh
 maintainers:
   - name: DataWerx
 # Artifact Hub reads these annotations straight from the chart to render the
@@ -28,14 +28,14 @@ annotations:
   artifacthub.io/operator: "true"
   artifacthub.io/signKey: |
     fingerprint: keyless (cosign / sigstore)
-    url: https://github.com/datawerx/datawerx/blob/main/docs/install.md
+    url: https://github.com/DataWerx/datawerx-mesh/blob/main/docs/install.md
   artifacthub.io/links: |
     - name: source
-      url: https://github.com/datawerx/datawerx
+      url: https://github.com/DataWerx/datawerx-mesh
     - name: documentation
-      url: https://github.com/datawerx/datawerx/tree/main/docs
+      url: https://github.com/DataWerx/datawerx-mesh/tree/main/docs
     - name: changelog
-      url: https://github.com/datawerx/datawerx/blob/main/CHANGELOG.md
+      url: https://github.com/DataWerx/datawerx-mesh/blob/main/CHANGELOG.md
   artifacthub.io/images: |
     - name: mesh-agent
       image: ghcr.io/datawerx/datawerx/mesh-agent:0.1.0

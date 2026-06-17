@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/datawerx/datawerx/pkg/logging"
+	"github.com/DataWerx/datawerx-mesh/pkg/logging"
 )
 
 func main() {

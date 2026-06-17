@@ -21,7 +21,7 @@ open-core seam. Use it to get the agent running; author peers separately.
 
 ```hcl
 module "datawerx_mesh" {
-  source = "github.com/datawerx/datawerx//examples/terraform"
+  source = "github.com/DataWerx/datawerx-mesh//examples/terraform"
 
   cluster_id    = "us-east"
   chart_version = "0.1.0"

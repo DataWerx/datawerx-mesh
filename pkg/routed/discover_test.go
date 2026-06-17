@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/datawerx/datawerx/pkg/routed"
+	"github.com/DataWerx/datawerx-mesh/pkg/routed"
 )
 
 func cidr(t *testing.T, s string) net.IPNet {
