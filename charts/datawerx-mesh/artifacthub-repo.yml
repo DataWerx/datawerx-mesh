@@ -1,0 +1,10 @@
+# Artifact Hub repository metadata. Placing this file in the chart's directory
+# lets the chart's owner be verified on Artifact Hub once the OCI repository
+# (oci://ghcr.io/datawerx/datawerx/charts) is added there.
+#
+# After claiming the repository in the Artifact Hub UI, paste the generated
+# repositoryID below. The owners block grants the verified-publisher badge.
+repositoryID: ""
+owners:
+  - name: DataWerx
+    email: maintainers@datawerx.io

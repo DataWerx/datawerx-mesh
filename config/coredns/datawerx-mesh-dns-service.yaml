@@ -1,0 +1,30 @@
+---
+# Stable in-cluster endpoint that fronts the per-node clusterset.local DNS
+# responders running inside each DataWerx Mesh agent pod (DaemonSet) on port
+# 5353. Cluster CoreDNS forwards the clusterset.local zone to this Service's
+# ClusterIP (see README.md in this directory).
+#
+# NOTE: the selector MUST match the labels the agent DaemonSet sets in
+# deploy/agent.yaml (app.kubernetes.io/name: dwx-mesh-agent). The Helm chart
+# keeps these in sync via its shared selectorLabels helper. This standalone dev
+# manifest must be kept in lockstep by hand.
+apiVersion: v1
+kind: Service
+metadata:
+  name: datawerx-mesh-dns
+  namespace: datawerx-system
+  labels:
+    app.kubernetes.io/name: dwx-mesh-agent
+    app.kubernetes.io/component: dns
+spec:
+  selector:
+    app.kubernetes.io/name: dwx-mesh-agent
+  ports:
+    - name: dns-udp
+      protocol: UDP
+      port: 53
+      targetPort: 5353
+    - name: dns-tcp
+      protocol: TCP
+      port: 53
+      targetPort: 5353

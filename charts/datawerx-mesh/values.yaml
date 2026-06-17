@@ -1,0 +1,167 @@
+# Default values for the datawerx-mesh chart.
+
+image:
+  # Published by the release workflow on each tagged release.
+  repository: ghcr.io/datawerx/datawerx/mesh-agent
+  # tag defaults to the chart's appVersion when empty.
+  tag: ""
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Mesh Identity & Ranges
+
+# clusterID stamps this cluster's exported services (DataWerx_CLUSTER_ID).
+# Strongly recommended, and required for cross-cluster service discovery to
+# attribute exports correctly.
+clusterID: ""
+
+# localCIDRs are this cluster's own comma-separated pod and service ranges.
+# They are used to detect overlap with remote peers (DataWerx_LOCAL_CIDRS).
+localCIDRs: "10.244.0.0/16,10.96.0.0/16"
+
+# Managed WireGuard link name (DataWerx_WG_INTERFACE). An empty 
+# value uses the default dwx-mesh0.
+wgInterface: ""
+
+# Peer data plane (DataWerx_DATAPLANE).  The default is "wireguard" where DataWerx owns a
+# WireGuard device.  Otherwise "routed" for bring-your-own-overlay which uses an
+# existing overlay like Tailscale/NetBird/Cilium  and provides connectivity.  In "routed"
+# mode, DataWerx only programs the host routes and the k8s multi-cluster layer on top
+# See docs/byo-overlay.md.
+dataplane: ""
+
+# Existing overlay device used as the route output device in routed mode
+# (DataWerx_OVERLAY_INTERFACE), e.g. tailscale0. Empty lets the kernel resolve it.
+overlayInterface: ""
+
+# WireGuard UDP listen port (DataWerx_WG_LISTEN_PORT). Empty uses 51820. Set when
+# 51820 is blocked and traffic must use another port.
+wgListenPort: ""
+
+# Persistent-keepalive interval for NAT/firewall traversal
+# (DataWerx_WG_KEEPALIVE, a Go duration). Empty uses 25s.
+wgKeepalive: ""
+
+# IPv4 range virtual ClusterSetIPs are allocated from (DataWerx_CLUSTERSET_CIDR).
+# Empty uses the default 241.0.0.0/8 (reserved Class E).
+clusterSetCIDR: ""
+
+# IPv6 range a second ClusterSetIP is allocated from for dual-stack services
+# (DataWerx_CLUSTERSET_CIDR6). Empty disables IPv6 ClusterSetIP allocation; set a
+# ULA range like fd00:dwx:cafe::/64 to enable it.
+clusterSetCIDR6: ""
+
+# Overlapping-CIDR remap (DataWerx_REMAP_CIDR). Empty or "false" keeps the safe
+# refuse-and-Error behavior for overlapping peers. Using "true" enables remap with the
+# default 172.16.0.0/12 pool; any CIDR sets a custom pool. This setting
+# requires all mesh clusters to enable it.
+remapCIDR: ""
+
+# Remap data-plane backend (DataWerx_REMAP_BACKEND): "iptables" (open-core
+# NETMAP, default) or "ebpf" (premium TC/eBPF datapath; requires an agent image
+# built with -tags ebpf_datapath, otherwise the agent refuses to start).
+remapBackend: ""
+
+# Listen address of the clusterset.local DNS responder (DataWerx_DNS_BIND).
+dnsBind: ":5353"
+
+# WireGuard private key
+wireguard:
+  privateKey:
+    # Reference an existing Secret holding the base64 WireGuard private key.
+    existingSecret: ""
+    existingSecretKey: private-key
+    # or provide the key inline - the chart creates a Secret. Leave both empty to
+    # let the agent generate an ephemeral key at startup.  Ephemeral keys are 
+    # for DEV ONLY.  They do not survive a restart which breaks reciprocal peering.
+    value: ""
+
+# premium / enterprise tier
+premium:
+  # Setting saasEndpoint switches the agent to the premium tier
+  # (DataWerx_SAAS_ENDPOINT).
+  saasEndpoint: ""
+  # Secret holding the OIDC/SSO machine token (DataWerx_ENTERPRISE_SSO_TOKEN).
+  ssoTokenSecret:
+    name: ""
+    key: token
+
+# RBAC / ServiceAccount
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+rbac:
+  create: true
+
+# clusterset.local DNS Service
+# Fronts the per-node responders; cluster CoreDNS forwards the zone here.
+dnsService:
+  enabled: true
+  name: ""
+  port: 53
+
+# DaemonSet
+daemonset:
+  # The data plane programs the host's network stack, so hostNetwork is required.
+  hostNetwork: true
+  priorityClassName: ""
+  updateStrategy: {}
+  podAnnotations: {}
+  podLabels: {}
+  nodeSelector: {}
+  # Run on every node, including control-plane / tainted nodes.
+  tolerations:
+    - operator: Exists
+  affinity: {}
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+      ephemeral-storage: 64Mi
+    limits:
+      memory: 128Mi
+      ephemeral-storage: 256Mi
+
+# Creating a kernel WireGuard link and iptables NAT needs broad privileges. We
+# grant the specific capabilities the data plane requires (such NET_ADMIN to manage
+# dwx-mesh0 + routes, SYS_MODULE to load the wireguard module) rather than
+# running fully privileged.
+securityContext:
+  runAsNonRoot: false
+  runAsUser: 0
+  capabilities:
+    add:
+      - NET_ADMIN
+      - SYS_MODULE
+
+# Manager bind addresses.
+metricsAddr: ":8080"
+healthProbeAddr: ":8081"
+
+# Expose Prometheus metrics through a Service and an optional ServiceMonitor.
+metrics:
+  service:
+    enabled: false
+    port: 8080
+  serviceMonitor:
+    enabled: false
+    # Requires the Prometheus Operator CRDs.
+    interval: 30s
+    labels: {}
+  # Ship the bundled Grafana dashboard as a ConfigMap. With the Grafana sidecar
+  # or kube-prometheus-stack, the sidecarLabel below makes it auto-imported.
+  dashboard:
+    enabled: false
+    # Namespace for the ConfigMap. Empty uses the release namespace. Set this to
+    # wherever your Grafana dashboard sidecar watches if it differs.
+    namespace: ""
+    # Label the Grafana sidecar selects on to discover dashboards.
+    sidecarLabel: grafana_dashboard
+    sidecarLabelValue: "1"
+    # Extra labels (e.g. to target a specific Grafana instance/folder).
+    labels: {}

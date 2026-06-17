@@ -1,0 +1,62 @@
+apiVersion: v2
+name: datawerx-mesh
+description: |
+  DataWerx Mesh — a CNI-agnostic, broker-less multi-cluster, GitOps-native
+  Kubernetes networking. Deploys the node agent as a DaemonSet; per-node
+  WireGuard with cross-cluster MCS service discovery, RBAC, CRDs, and
+  clusterset.local DNS responder it needs.
+type: application
+version: 0.1.0
+# appVersion tracks the agent image tag the chart ships by default.
+appVersion: "0.1.0"
+keywords:
+  - multi-cluster
+  - wireguard
+  - networking
+  - mcs
+  - service-discovery
+home: https://github.com/datawerx/datawerx
+sources:
+  - https://github.com/datawerx/datawerx
+maintainers:
+  - name: DataWerx
+# Artifact Hub reads these annotations straight from the chart to render the
+# listing at https://artifacthub.io/packages/helm/datawerx-mesh/datawerx-mesh.
+annotations:
+  artifacthub.io/category: networking
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/operator: "true"
+  artifacthub.io/signKey: |
+    fingerprint: keyless (cosign / sigstore)
+    url: https://github.com/datawerx/datawerx/blob/main/docs/install.md
+  artifacthub.io/links: |
+    - name: source
+      url: https://github.com/datawerx/datawerx
+    - name: documentation
+      url: https://github.com/datawerx/datawerx/tree/main/docs
+    - name: changelog
+      url: https://github.com/datawerx/datawerx/blob/main/CHANGELOG.md
+  artifacthub.io/images: |
+    - name: mesh-agent
+      image: ghcr.io/datawerx/datawerx/mesh-agent:0.1.0
+  artifacthub.io/crds: |
+    - kind: MeshPeer
+      version: v1alpha1
+      name: meshpeers.networking.datawerx.io
+      displayName: Mesh Peer
+      description: A remote cluster to converge into the local WireGuard data plane.
+    - kind: MeshNetworkPolicy
+      version: v1alpha1
+      name: meshnetworkpolicies.networking.datawerx.io
+      displayName: Mesh Network Policy
+      description: Cross-cluster ingress policy compiled into the mesh firewall.
+    - kind: ServiceExport
+      version: v1alpha1
+      name: serviceexports.multicluster.x-k8s.io
+      displayName: Service Export
+      description: Marks a Service for export across the clusterset (MCS, KEP-1645).
+    - kind: ServiceImport
+      version: v1alpha1
+      name: serviceimports.multicluster.x-k8s.io
+      displayName: Service Import
+      description: The aggregated cross-cluster view of an exported Service.

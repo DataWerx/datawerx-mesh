@@ -1,0 +1,345 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "apiVersion": {
+      "type": "string"
+    },
+    "conflicts": {
+      "items": {
+        "properties": {
+          "clusterID": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clusterID",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "events": {
+      "items": {
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "lastSeen": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "exports": {
+      "items": {
+        "properties": {
+          "conflict": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "namespace": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "namespace",
+          "valid"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "generatedAt": {
+      "type": "integer"
+    },
+    "health": {
+      "properties": {
+        "checks": {
+          "items": {
+            "properties": {
+              "detail": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "status"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "checks"
+      ],
+      "type": "object"
+    },
+    "imports": {
+      "items": {
+        "properties": {
+          "clusters": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "ips": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "namespace": {
+            "type": "string"
+          },
+          "ports": {
+            "items": {
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": "integer"
+                },
+                "protocol": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "port"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "namespace",
+          "type"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "metrics": {
+      "items": {
+        "properties": {
+          "help": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "peers": {
+      "items": {
+        "properties": {
+          "clusterID": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "handshakeAge": {
+            "type": "integer"
+          },
+          "lastHandshake": {
+            "type": "integer"
+          },
+          "lastProbe": {
+            "type": "integer"
+          },
+          "lastProbeAttempt": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "observedGeneration": {
+            "type": "integer"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "podCIDRs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "probeAge": {
+            "type": "integer"
+          },
+          "probed": {
+            "type": "boolean"
+          },
+          "publicKey": {
+            "type": "string"
+          },
+          "serviceCIDRs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "clusterID",
+          "handshakeAge",
+          "name"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "policies": {
+      "items": {
+        "properties": {
+          "destinations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "ingress": {
+            "items": {
+              "properties": {
+                "from": {
+                  "items": {
+                    "properties": {
+                      "cidrs": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "clusterIDs": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "ports": {
+                  "items": {
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "port": {
+                        "type": "integer"
+                      },
+                      "protocol": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "port"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "ingressRules": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ingressRules",
+          "name"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "conflicts",
+    "events",
+    "exports",
+    "health",
+    "imports",
+    "kind",
+    "metrics",
+    "peers",
+    "policies"
+  ],
+  "title": "MeshSnapshot",
+  "type": "object"
+}

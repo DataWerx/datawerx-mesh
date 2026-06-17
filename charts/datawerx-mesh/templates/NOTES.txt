@@ -1,0 +1,48 @@
+DataWerx Mesh agent installed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+The agent runs as a DaemonSet (one pod per node):
+  kubectl -n {{ .Release.Namespace }} rollout status daemonset/{{ include "datawerx-mesh.fullname" . }}
+
+{{- if not .Values.clusterID }}
+
+⚠  No clusterID was set. Cross-cluster service discovery needs a stable
+   per-cluster ID. Re-install with --set clusterID=<your-cluster-id>.
+{{- end }}
+
+{{- if and (not .Values.wireguard.privateKey.existingSecret) (not .Values.wireguard.privateKey.value) }}
+
+⚠  No WireGuard private key configured — the agent will generate an EPHEMERAL
+   key that does not survive a restart (dev only). For real peering, set:
+     --set wireguard.privateKey.existingSecret=<secret> \
+     --set wireguard.privateKey.existingSecretKey=private-key
+{{- end }}
+
+Next steps:
+
+1. Peer with another cluster by creating a MeshPeer (one per remote cluster):
+
+     apiVersion: networking.datawerx.io/v1alpha1
+     kind: MeshPeer
+     metadata: { name: cluster-b }
+     spec:
+       clusterID: cluster-b
+       publicKey: "<remote wg public key>"
+       endpoint: "<remote host:51820>"
+       podCIDRs: ["10.245.0.0/16"]
+       serviceCIDRs: ["10.97.0.0/16"]
+
+2. Export a Service for cross-cluster discovery:
+
+     kubectl apply -f - <<EOF
+     apiVersion: multicluster.x-k8s.io/v1alpha1
+     kind: ServiceExport
+     metadata: { name: <svc>, namespace: <ns> }
+     EOF
+
+{{- if .Values.dnsService.enabled }}
+
+3. Point cluster CoreDNS at the clusterset.local responder. Forward the zone to:
+     {{ include "datawerx-mesh.dnsServiceName" . }}.{{ .Release.Namespace }} (port {{ .Values.dnsService.port }})
+   See config/coredns/README.md for the Corefile stanza. Then resolve:
+     <svc>.<ns>.svc.clusterset.local
+{{- end }}

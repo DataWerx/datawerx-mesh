@@ -1,0 +1,73 @@
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "datawerx-mesh.fullname" . }}
+  labels:
+    {{- include "datawerx-mesh.labels" . | nindent 4 }}
+rules:
+  # MeshPeer: reconciled, finalized, status-patched; listed/watched by the
+  # LocalGitOpsClient.
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["meshpeers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["meshpeers/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["meshpeers/finalizers"]
+    verbs: ["update"]
+  # EndpointExport: the broker-less wire format (published + consumed).
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["endpointexports"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # MeshNetworkPolicy: cross-cluster L3/L4 firewall, status-patched.
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["meshnetworkpolicies"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["meshnetworkpolicies/status"]
+    verbs: ["get", "update", "patch"]
+  # ServiceExport (MCS): validated + finalizer + status conditions.
+  - apiGroups: ["multicluster.x-k8s.io"]
+    resources: ["serviceexports"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["multicluster.x-k8s.io"]
+    resources: ["serviceexports/status", "serviceexports/finalizers"]
+    verbs: ["get", "update", "patch"]
+  # ServiceImport (MCS): produced by the import controller.
+  - apiGroups: ["multicluster.x-k8s.io"]
+    resources: ["serviceimports"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["multicluster.x-k8s.io"]
+    resources: ["serviceimports/status"]
+    verbs: ["get", "update", "patch"]
+  # Services: read to derive exported endpoints.
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch"]
+  # EndpointSlices: read to derive exported headless endpoints, and write to
+  # mirror imported cross-cluster endpoints into the consuming cluster (KEP-1645).
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Events for the reconcile loop.
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "datawerx-mesh.fullname" . }}
+  labels:
+    {{- include "datawerx-mesh.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "datawerx-mesh.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "datawerx-mesh.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

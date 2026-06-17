@@ -1,0 +1,129 @@
+name: routed-e2e
+
+# Runs on every push/PR: the bring-your-own-overlay (routed) data plane must
+# work end to end. Two kind clusters share docker's network (i.e. a stand-in
+# overlay) and DataWerx runs WITHOUT a WireGuard device — it only programs
+# routes and the k8s multi-cluster layer. Because there is no WG device, this needs
+# no `wireguard` kernel module, only iptable_nat for the ClusterSetIP path.
+# It's light enough to gate normal CI rather than only the nightly matrix.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cmd/**"
+      - "pkg/**"
+      - "config/**"
+      - "charts/**"
+      - "deploy/**"
+      - "hack/e2e/**"
+      - "test/e2e/**"
+      - ".github/workflows/routed-e2e.yml"
+      - "go.mod"
+      - "go.sum"
+  pull_request:
+    paths:
+      - "cmd/**"
+      - "pkg/**"
+      - "config/**"
+      - "charts/**"
+      - "deploy/**"
+      - "hack/e2e/**"
+      - "test/e2e/**"
+      - ".github/workflows/routed-e2e.yml"
+      - "go.mod"
+      - "go.sum"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same ref cancels an in-flight run (kind e2e is slow).
+concurrency:
+  group: routed-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  routed:
+    name: BYO-overlay (routed) two-cluster e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+          check-latest: true
+
+      - name: Install tooling (kind, wireguard-tools)
+        # wireguard-tools provides the `wg` userspace binary kind-up.sh uses to
+        # generate keys; the kernel module is NOT loaded (routed mode owns no WG
+        # device).
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wireguard-tools
+          go install sigs.k8s.io/kind@v0.23.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Load kernel module (iptable_nat for ClusterSetIP DNAT)
+        run: sudo modprobe iptable_nat
+
+      - name: Bring up two-cluster mesh in routed mode
+        env:
+          ROUTED: "1"
+        run: hack/e2e/kind-up.sh
+
+      # This gate validates what DataWerx controls in routed mode —
+      # peers reach Connected (routes installed) and imports tear down. The full
+      # cross-cluster data path (pod → pod curl) depends on the overlay actually
+      # forwarding pod CIDRs end to end; two independent kind clusters don't
+      # replicate a real overlay's gateway data path, so that is validated on a
+      # real overlay and by the WireGuard `distinct` e2e, not here.
+      - name: Run routed e2e (DataWerx-controlled assertions)
+        env:
+          E2E_CONTEXT_A: kind-dwx-a
+          E2E_CONTEXT_B: kind-dwx-b
+        run: go test -tags e2e -timeout 15m -v -run 'TestMeshPeersConnected|TestServiceImportTornDownOnUnexport' ./test/e2e/...
+
+      # Asserts routed mode from the AGENT's own logs, not from the absence
+      # of a kernel device on the node — a self-hosted/reused runner can
+      # carry a stale dwx-mesh0 from a prior WireGuard run, which says nothing
+      # about this agent. In routed mode the agent never constructs a WireGuard
+      # manager (i.e. cmd/manager selectPeerDataPlane), so "mode":"routed" in its
+      # log is proof it created no device.
+      - name: Assert routed mode + routes programmed (from the agent)
+        run: |
+          logs=$(kubectl --context kind-dwx-a -n datawerx-system logs ds/dwx-mesh-agent)
+          echo "$logs" | grep -q '"mode":"routed"' \
+            || { echo "::error::agent did not report routed mode"; exit 1; }
+          echo "$logs" | grep -q "peer routes programmed" \
+            || { echo "::error::routed data plane did not program peer routes"; exit 1; }
+          echo "confirmed: agent ran in routed mode and programmed peer routes (no WireGuard device created by the agent)"
+
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          for ctx in kind-dwx-a kind-dwx-b; do
+            echo "===================== $ctx ====================="
+            kubectl --context "$ctx" -n datawerx-system get pods -o wide || true
+            kubectl --context "$ctx" -n datawerx-system describe pods -l app.kubernetes.io/name=dwx-mesh-agent || true
+            echo "----- agent logs (current) -----"
+            kubectl --context "$ctx" -n datawerx-system logs ds/dwx-mesh-agent --all-containers --tail=200 || true
+            echo "----- agent logs (previous, if it restarted) -----"
+            kubectl --context "$ctx" -n datawerx-system logs ds/dwx-mesh-agent --all-containers --previous --tail=200 || true
+            kubectl --context "$ctx" get meshpeer -o wide || true
+          done
+          echo "===================== host FORWARD / DOCKER-USER ====================="
+          sudo iptables -S FORWARD || true
+          sudo iptables -S DOCKER-USER || true
+          for node in dwx-a-control-plane dwx-b-control-plane; do
+            echo "===================== node $node: routes + iptables ====================="
+            docker exec "$node" ip route || true
+            docker exec "$node" iptables -t nat -S | grep -i dwx || true
+            docker exec "$node" iptables -S FORWARD || true
+          done
+
+      - name: Tear down
+        if: always()
+        run: hack/e2e/kind-down.sh

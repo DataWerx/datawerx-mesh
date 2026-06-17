@@ -1,0 +1,83 @@
+name: e2e
+
+# The e2e suite stands up two real kind clusters with a live WireGuard data
+# plane, thus it is root-dependent. It never runs on the default
+# push/PR path — only on demand and on a nightly schedule.
+#
+# Two modes run as a matrix:
+#   distinct — clusters with non-overlapping CIDRs (connectivity + headless DNS).
+#   overlap  — both clusters on the same CIDRs with remap enabled.
+#   routed   — bring-your-own-overlay: no WireGuard device; routes ride the shared
+#              kind docker network. The BYO-overlay gate.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *" # nightly 06:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  kind-e2e:
+    name: two-cluster kind e2e (${{ matrix.mode }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: distinct
+            overlap: "0"
+            routed: "0"
+            run: ".*"
+          - mode: overlap
+            overlap: "1"
+            routed: "0"
+            # In overlap mode the distinct-CIDR DNS tests don't apply (headless
+            # pod IPs overlap); run peer connectivity + the remap.
+            run: "TestMeshPeersConnected|TestOverlapRemapConnectivity"
+          - mode: routed
+            overlap: "0"
+            routed: "1"
+            # BYO-overlay over the shared kind network: validate what DataWerx
+            # controls (peers Connected → routes installed; import teardown).
+            # The full pod → pod data path needs a real overlay's gateway
+            # forwarding, which two independent kind clusters don't replicate.
+            # This is proven on a real overlay using the WireGuard `distinct`
+            # mode above.
+            run: "TestMeshPeersConnected|TestServiceImportTornDownOnUnexport"
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+          check-latest: true
+
+      - name: Install tooling (kind, wireguard-tools)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wireguard-tools
+          go install sigs.k8s.io/kind@v0.23.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Load kernel modules
+        run: sudo modprobe wireguard iptable_nat
+
+      - name: Bring up two-cluster mesh
+        env:
+          OVERLAP: ${{ matrix.overlap }}
+          ROUTED: ${{ matrix.routed }}
+        run: hack/e2e/kind-up.sh
+
+      - name: Run e2e suite
+        env:
+          E2E_CONTEXT_A: kind-dwx-a
+          E2E_CONTEXT_B: kind-dwx-b
+          E2E_OVERLAP: ${{ matrix.overlap }}
+        run: go test -tags e2e -timeout 30m -v -run '${{ matrix.run }}' ./test/e2e/...
+
+      - name: Tear down
+        if: always()
+        run: hack/e2e/kind-down.sh

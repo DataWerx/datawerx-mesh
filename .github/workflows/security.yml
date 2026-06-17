@@ -1,0 +1,67 @@
+name: security
+
+# Supply-chain checks that complement the signed, SBOM'd releases: scan the Go
+# module for known vulnerabilities. Runs on every push/PR and weekly, so a
+# newly-disclosed CVE in a pinned dependency surfaces even without a code change.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  govulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    env:
+      # Resolve modules through the proxy with no direct fallback: the wgctrl
+      # host is not in the CI allowlist, so a `direct` resolution would fail.
+      GOPROXY: https://proxy.golang.org
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+          check-latest: true
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Scan
+        # Reports only vulnerabilities that are actually reachable from our code,
+        # plus any in the Go toolchain used to build.
+        run: govulncheck ./...
+
+  fuzz:
+    name: fuzz pure parsers
+    # The fuzz seed corpora run on every push via `go test ./...`; this job does
+    # short *active* fuzzing of the untrusted/parsing surfaces on a schedule (or
+    # on demand) to keep finding new inputs without slowing PRs.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      GOPROXY: https://proxy.golang.org
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+          check-latest: true
+
+      - name: Fuzz
+        run: |
+          set -euo pipefail
+          go test ./pkg/bootstrap/ -run '^$' -fuzz '^FuzzDecode$' -fuzztime 90s
+          go test ./pkg/topology/ -run '^$' -fuzz '^FuzzSanitizeName$' -fuzztime 60s
+          go test ./pkg/topology/ -run '^$' -fuzz '^FuzzParseCIDRList$' -fuzztime 30s
+          go test ./pkg/topology/ -run '^$' -fuzz '^FuzzVirtualCIDR$' -fuzztime 30s
+          go test ./pkg/dns/ -run '^$' -fuzz '^FuzzParseClusterSetName$' -fuzztime 60s

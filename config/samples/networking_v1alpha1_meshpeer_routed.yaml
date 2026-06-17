@@ -1,0 +1,21 @@
+# Example MeshPeer for "bring your own overlay" routed mode # (DataWerx_DATAPLANE=routed). 
+# The agent does not create a WireGuard device. Instead, it installs host routes that 
+# steer this peer's CIDRs at the remote gateway's # existing overlay address
+# (e.g. its Tailscale/NetBird IP).
+#
+# In routed mode:
+#   - spec.endpoint  = the remote gateway's OVERLAY IP (not a WG host:port)
+#   - spec.publicKey = any stable unique ID (keys route bookkeeping; not a WG key)
+# See docs/byo-overlay.md.
+apiVersion: networking.datawerx.io/v1alpha1
+kind: MeshPeer
+metadata:
+  name: cluster-b
+spec:
+  clusterID: cluster-b
+  publicKey: cluster-b
+  endpoint: 100.64.0.9
+  podCIDRs:
+    - 10.40.0.0/16
+  serviceCIDRs:
+    - 10.96.0.0/16

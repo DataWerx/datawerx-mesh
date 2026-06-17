@@ -1,0 +1,171 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "title": "DataWerx Mesh",
+  "uid": "datawerx-mesh",
+  "tags": ["datawerx", "mesh", "wireguard", "multicluster"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Mesh topology",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "type": "stat",
+      "title": "MeshPeers by phase",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "sum by (phase) (dwx_meshpeers)",
+          "legendFormat": "{{phase}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Connected peers over time",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 1 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } } },
+      "targets": [
+        { "expr": "sum(dwx_meshpeers{phase=\"Connected\"})", "legendFormat": "connected", "refId": "A" },
+        { "expr": "sum(dwx_meshpeers{phase=\"Error\"})", "legendFormat": "error", "refId": "B" },
+        { "expr": "sum(dwx_meshpeers{phase=\"Pending\"})", "legendFormat": "pending", "refId": "C" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Seconds since last WireGuard handshake (per peer)",
+      "description": "now() minus the last handshake timestamp. Climbing means a tunnel has gone quiet.",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 0 } } },
+      "targets": [
+        {
+          "expr": "time() - dwx_meshpeer_last_handshake_timestamp_seconds > 0",
+          "legendFormat": "{{cluster_id}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Service discovery (MCS)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 }
+    },
+    {
+      "type": "timeseries",
+      "title": "ServiceImports by type",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "sum by (type) (dwx_serviceimports)", "legendFormat": "{{type}}", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "ServiceExports valid vs invalid",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 8 },
+      "targets": [
+        { "expr": "sum by (valid) (dwx_serviceexports)", "legendFormat": "valid={{valid}}", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "EndpointExports",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 8 },
+      "targets": [
+        { "expr": "sum(dwx_endpointexports)", "legendFormat": "endpoint exports", "refId": "A" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "clusterset.local DNS",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 }
+    },
+    {
+      "type": "timeseries",
+      "title": "DNS query rate by rcode",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 15 },
+      "fieldConfig": { "defaults": { "unit": "qps" } },
+      "targets": [
+        { "expr": "sum by (rcode) (rate(dwx_dns_queries_total[5m]))", "legendFormat": "{{rcode}}", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "DNS query latency (p50/p95/p99)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 15 },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum(rate(dwx_dns_query_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(dwx_dns_query_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95", "refId": "B" },
+        { "expr": "histogram_quantile(0.99, sum(rate(dwx_dns_query_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99", "refId": "C" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Data plane (NAT / overlap remap)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 }
+    },
+    {
+      "type": "timeseries",
+      "title": "ClusterSetIP NAT syncs by result",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 22 },
+      "targets": [
+        { "expr": "sum by (result) (rate(dwx_clusterset_nat_syncs_total[5m]))", "legendFormat": "{{result}}", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Overlap NETMAP syncs by result",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 22 },
+      "targets": [
+        { "expr": "sum by (result) (rate(dwx_remap_syncs_total[5m]))", "legendFormat": "{{result}}", "refId": "A" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Active overlap NETMAP entries",
+      "description": "Local real⇄virtual 1:1 remap pairs currently programmed across all overlapping peers.",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 22 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        { "expr": "max(dwx_remap_active_entries)", "legendFormat": "entries", "refId": "A" }
+      ]
+    }
+  ]
+}

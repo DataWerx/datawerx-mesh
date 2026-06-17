@@ -1,0 +1,33 @@
+---
+# Simple 'happy path'.  A remote cluster whose CIDRs do NOT overlap this cluster's local
+# ranges (10.244.0.0/16 pods, 10.96.0.0/16 svc). The reconciler should program
+# it and report phase=Connected.
+apiVersion: networking.datawerx.io/v1alpha1
+kind: MeshPeer
+metadata:
+  name: cluster-frankfurt
+spec:
+  clusterID: cluster-frankfurt
+  # A valid base64 Curve25519 public key. 
+  # It is a throwaway key for local testing — no real peer is on the other end.
+  publicKey: "lAb00FGHelhBj8lj3xDXTHjUZHHiplyVk+RlSSE2678="
+  endpoint: "203.0.113.10:51820"
+  podCIDRs:
+    - "10.50.0.0/16"
+  serviceCIDRs:
+    - "10.97.0.0/16"
+---
+# More comples Overlap case.  This remote advertises 10.244.0.0/16, which 
+# collides with the LOCAL pod CIDR. The open core refuses to route it 
+# because would hijack local pod traffic.  It reports phase=Error pending 
+# the premium NAT-remap path.
+apiVersion: networking.datawerx.io/v1alpha1
+kind: MeshPeer
+metadata:
+  name: cluster-overlap
+spec:
+  clusterID: cluster-overlap
+  publicKey: "R5u14wbj7TpGxWwS7jP5Z06s8eNrG62XaNwI6B29uaE="
+  endpoint: "203.0.113.20:51820"
+  podCIDRs:
+    - "10.244.0.0/16"

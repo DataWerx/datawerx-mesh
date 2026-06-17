@@ -1,0 +1,15 @@
+---
+# A sample MeshPeer authored by a GitOps pipeline in the Free/Open tier.
+# The local node agent will program this remote cluster into dwx-mesh0.
+apiVersion: networking.datawerx.io/v1alpha1
+kind: MeshPeer
+metadata:
+  name: cluster-frankfurt
+spec:
+  clusterID: cluster-frankfurt
+  publicKey: "REPLACE_WITH_REMOTE_WG_PUBLIC_KEY="
+  endpoint: "203.0.113.10:51820"
+  podCIDRs:
+    - "10.50.0.0/16"
+  serviceCIDRs:
+    - "10.96.0.0/12"

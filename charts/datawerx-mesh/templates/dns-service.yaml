@@ -1,0 +1,22 @@
+{{- if .Values.dnsService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "datawerx-mesh.dnsServiceName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datawerx-mesh.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dns
+spec:
+  selector:
+    {{- include "datawerx-mesh.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: dns-udp
+      protocol: UDP
+      port: {{ .Values.dnsService.port }}
+      targetPort: {{ regexReplaceAll "^.*:" .Values.dnsBind "" | int }}
+    - name: dns-tcp
+      protocol: TCP
+      port: {{ .Values.dnsService.port }}
+      targetPort: {{ regexReplaceAll "^.*:" .Values.dnsBind "" | int }}
+{{- end }}

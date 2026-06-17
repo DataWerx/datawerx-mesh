@@ -1,0 +1,110 @@
+{
+  "title": "DataWerx Mesh",
+  "uid": "datawerx-mesh",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "MeshPeers by phase",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "sum by (phase) (dwx_meshpeers)", "legendFormat": "{{phase}}", "refId": "A" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Peer last-handshake age (s)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "time() - (dwx_meshpeer_last_handshake_timestamp_seconds > 0)",
+          "legendFormat": "{{cluster_id}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "ServiceImports by type",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "sum by (type) (dwx_serviceimports)", "legendFormat": "{{type}}", "refId": "A" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "ServiceExports (valid)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "targets": [
+        { "expr": "sum by (valid) (dwx_serviceexports)", "legendFormat": "valid={{valid}}", "refId": "A" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "EndpointExports",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "targets": [
+        { "expr": "sum(dwx_endpointexports)", "refId": "A" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "clusterset.local DNS query rate by rcode",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        { "expr": "sum by (rcode) (rate(dwx_dns_queries_total[5m]))", "legendFormat": "{{rcode}}", "refId": "A" }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "DNS query latency p99",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(dwx_dns_query_duration_seconds_bucket[5m])))",
+          "legendFormat": "p99",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "ClusterSetIP NAT sync rate by result",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        { "expr": "sum by (result) (rate(dwx_clusterset_nat_syncs_total[5m]))", "legendFormat": "{{result}}", "refId": "A" }
+      ]
+    }
+  ]
+}

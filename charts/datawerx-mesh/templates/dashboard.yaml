@@ -1,0 +1,17 @@
+{{- if .Values.metrics.dashboard.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "datawerx-mesh.fullname" . }}-dashboard
+  namespace: {{ .Values.metrics.dashboard.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "datawerx-mesh.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics
+    {{- with .Values.metrics.dashboard.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{ .Values.metrics.dashboard.sidecarLabel }}: {{ .Values.metrics.dashboard.sidecarLabelValue | quote }}
+data:
+  datawerx-mesh.json: |-
+{{ .Files.Get "dashboards/datawerx-mesh.json" | indent 4 }}
+{{- end }}

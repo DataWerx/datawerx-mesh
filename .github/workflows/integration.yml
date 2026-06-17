@@ -1,0 +1,37 @@
+name: integration
+
+# Controller integration tests run against a real API server using envtest.
+# They need the kube-apiserver + etcd test binaries, so they run on PRs and main
+# rather than the default unit path, but stay separate from the hermetic
+# `go test ./...` in ci.yml.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  envtest:
+    name: controller integration (envtest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+          check-latest: true
+
+      - name: Install setup-envtest
+        run: go install sigs.k8s.io/controller-runtime/tools/setup-envtest@release-0.18
+
+      - name: Provision envtest binaries
+        run: echo "KUBEBUILDER_ASSETS=$(setup-envtest use -p path 1.30.0)" >> "$GITHUB_ENV"
+
+      - name: Run integration tests
+        run: go test -tags integration -count=1 -v ./test/integration/...

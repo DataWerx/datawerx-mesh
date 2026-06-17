@@ -1,0 +1,64 @@
+name: ecosystem
+
+# Validate the adoption/ecosystem artifacts that ship alongside the chart and
+# binaries: the GoReleaser config, the Terraform install module, and the
+# Artifact Hub / Backstage manifests. These have no Go test coverage, so this is
+# the gate that keeps them from silently rotting.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "examples/**"
+      - ".goreleaser.yaml"
+      - "charts/datawerx-mesh/Chart.yaml"
+      - "charts/datawerx-mesh/artifacthub-repo.yml"
+      - ".github/workflows/ecosystem.yml"
+  pull_request:
+    paths:
+      - "examples/**"
+      - ".goreleaser.yaml"
+      - "charts/datawerx-mesh/Chart.yaml"
+      - "charts/datawerx-mesh/artifacthub-repo.yml"
+      - ".github/workflows/ecosystem.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  goreleaser-check:
+    name: goreleaser config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: goreleaser check
+        uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89 # v7.2.2
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: check
+
+  terraform:
+    name: terraform module
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+      - name: terraform fmt
+        run: terraform fmt -check -recursive examples/terraform
+      - name: terraform init & validate
+        working-directory: examples/terraform
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+
+  manifests:
+    name: artifact-hub & backstage manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Validate YAML manifests and chart annotations
+        run: |
+          python3 -m pip install --quiet pyyaml || true
+          python3 hack/validate_manifests.py

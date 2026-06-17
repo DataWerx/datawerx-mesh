@@ -1,0 +1,39 @@
+{{- if .Values.metrics.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "datawerx-mesh.fullname" . }}-metrics
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datawerx-mesh.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics
+spec:
+  selector:
+    {{- include "datawerx-mesh.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: metrics
+      protocol: TCP
+      port: {{ .Values.metrics.service.port }}
+      targetPort: {{ regexReplaceAll "^.*:" .Values.metricsAddr "" | int }}
+{{- end }}
+{{- if .Values.metrics.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "datawerx-mesh.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datawerx-mesh.labels" . | nindent 4 }}
+    {{- with .Values.metrics.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "datawerx-mesh.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: metrics
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
+{{- end }}

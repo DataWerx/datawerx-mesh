@@ -1,0 +1,32 @@
+# Example MeshNetworkPolicy: only cluster-b's ranges may reach the local
+# database service CIDR over the mesh, and only on Postgres/5432. Because the
+# `db` destination is now selected by a policy, all *other* mesh sources to that
+# range are denied by default. In other words, Kubernetes NetworkPolicy semantics, mesh-wide.
+apiVersion: networking.datawerx.io/v1alpha1
+kind: MeshNetworkPolicy
+metadata:
+  name: allow-cluster-b-to-db
+spec:
+  destinations:
+    - 10.96.5.0/24
+  ingress:
+    - from:
+        - clusterIDs:
+            - cluster-b
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+# Example default-deny: with empty destinations this protects *all* mesh ingress
+# on this cluster, allowing only the explicitly listed source range. Apply
+# deliberately because it drops every other cross-cluster flow not already 
+# permitted by another policy.
+apiVersion: networking.datawerx.io/v1alpha1
+kind: MeshNetworkPolicy
+metadata:
+  name: mesh-default-deny
+spec:
+  ingress:
+    - from:
+        - cidrs:
+            - 10.50.0.0/16

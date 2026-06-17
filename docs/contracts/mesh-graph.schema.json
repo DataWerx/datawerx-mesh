@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "apiVersion": {
+      "type": "string"
+    },
+    "edges": {
+      "items": {
+        "properties": {
+          "conflict": {
+            "type": "boolean"
+          },
+          "from": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "policy": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "kind",
+          "to"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "generatedAt": {
+      "type": "integer"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "nodes": {
+      "items": {
+        "properties": {
+          "clusterID": {
+            "type": "string"
+          },
+          "conflict": {
+            "type": "boolean"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "exported": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "importType": {
+            "type": "string"
+          },
+          "imported": {
+            "type": "boolean"
+          },
+          "ips": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "local": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "namespace": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "label"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "edges",
+    "kind",
+    "nodes"
+  ],
+  "title": "MeshGraph",
+  "type": "object"
+}

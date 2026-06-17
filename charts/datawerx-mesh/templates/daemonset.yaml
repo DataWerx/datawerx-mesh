@@ -1,0 +1,155 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "datawerx-mesh.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datawerx-mesh.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "datawerx-mesh.selectorLabels" . | nindent 6 }}
+  {{- with .Values.daemonset.updateStrategy }}
+  updateStrategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "datawerx-mesh.selectorLabels" . | nindent 8 }}
+        {{- with .Values.daemonset.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.daemonset.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "datawerx-mesh.serviceAccountName" . }}
+      hostNetwork: {{ .Values.daemonset.hostNetwork }}
+      {{- if .Values.daemonset.hostNetwork }}
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.daemonset.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- with .Values.daemonset.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.daemonset.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.daemonset.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: agent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "--metrics-bind-address={{ .Values.metricsAddr }}"
+            - "--health-probe-bind-address={{ .Values.healthProbeAddr }}"
+          env:
+            {{- if .Values.clusterID }}
+            - name: DataWerx_CLUSTER_ID
+              value: {{ .Values.clusterID | quote }}
+            {{- end }}
+            {{- if .Values.localCIDRs }}
+            - name: DataWerx_LOCAL_CIDRS
+              value: {{ .Values.localCIDRs | quote }}
+            {{- end }}
+            {{- if .Values.wgInterface }}
+            - name: DataWerx_WG_INTERFACE
+              value: {{ .Values.wgInterface | quote }}
+            {{- end }}
+            {{- if .Values.dataplane }}
+            - name: DataWerx_DATAPLANE
+              value: {{ .Values.dataplane | quote }}
+            {{- end }}
+            {{- if .Values.overlayInterface }}
+            - name: DataWerx_OVERLAY_INTERFACE
+              value: {{ .Values.overlayInterface | quote }}
+            {{- end }}
+            {{- if .Values.wgListenPort }}
+            - name: DataWerx_WG_LISTEN_PORT
+              value: {{ .Values.wgListenPort | quote }}
+            {{- end }}
+            {{- if .Values.wgKeepalive }}
+            - name: DataWerx_WG_KEEPALIVE
+              value: {{ .Values.wgKeepalive | quote }}
+            {{- end }}
+            {{- if .Values.clusterSetCIDR }}
+            - name: DataWerx_CLUSTERSET_CIDR
+              value: {{ .Values.clusterSetCIDR | quote }}
+            {{- end }}
+            {{- if .Values.clusterSetCIDR6 }}
+            - name: DataWerx_CLUSTERSET_CIDR6
+              value: {{ .Values.clusterSetCIDR6 | quote }}
+            {{- end }}
+            {{- if .Values.remapCIDR }}
+            - name: DataWerx_REMAP_CIDR
+              value: {{ .Values.remapCIDR | quote }}
+            {{- end }}
+            {{- if .Values.remapBackend }}
+            - name: DataWerx_REMAP_BACKEND
+              value: {{ .Values.remapBackend | quote }}
+            {{- end }}
+            {{- if .Values.dnsBind }}
+            - name: DataWerx_DNS_BIND
+              value: {{ .Values.dnsBind | quote }}
+            {{- end }}
+            {{- if .Values.wireguard.privateKey.existingSecret }}
+            - name: DataWerx_WG_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wireguard.privateKey.existingSecret }}
+                  key: {{ .Values.wireguard.privateKey.existingSecretKey }}
+            {{- else if .Values.wireguard.privateKey.value }}
+            - name: DataWerx_WG_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "datawerx-mesh.wgSecretName" . }}
+                  key: private-key
+            {{- end }}
+            {{- if .Values.premium.saasEndpoint }}
+            - name: DataWerx_SAAS_ENDPOINT
+              value: {{ .Values.premium.saasEndpoint | quote }}
+            {{- end }}
+            {{- if .Values.premium.ssoTokenSecret.name }}
+            - name: DataWerx_ENTERPRISE_SSO_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.premium.ssoTokenSecret.name }}
+                  key: {{ .Values.premium.ssoTokenSecret.key }}
+            {{- end }}
+          ports:
+            - name: health
+              containerPort: {{ regexReplaceAll "^.*:" .Values.healthProbeAddr "" | int }}
+            - name: metrics
+              containerPort: {{ regexReplaceAll "^.*:" .Values.metricsAddr "" | int }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          {{- with .Values.daemonset.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}

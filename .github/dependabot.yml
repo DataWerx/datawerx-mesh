@@ -1,0 +1,22 @@
+version: 2
+
+# Keep dependencies current so the security scans stay meaningful and the
+# OpenSSF Scorecard "Dependency-Update-Tool" check passes. The k8s libraries
+# move in lockstep, so they are grouped into one PR.
+updates:
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      kubernetes:
+        patterns:
+          - "k8s.io/*"
+          - "sigs.k8s.io/*"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

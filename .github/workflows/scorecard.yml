@@ -1,0 +1,66 @@
+name: Scorecard
+
+# OpenSSF Scorecard: scores the repo's supply-chain posture (branch protection,
+# pinned dependencies, token permissions, signed releases, …) and publishes the
+# result so the README badge and the public Scorecard report stay current.
+on:
+  branch_protection_rule:
+  schedule:
+    - cron: "0 8 * * 1" # Mondays 08:00 UTC
+  push:
+    branches: [main]
+
+permissions: read-all
+
+jobs:
+  # Scorecard publishes results and uploads SARIF to code scanning, both of which
+  # need a public repository. Gate the analysis on visibility so it shows as
+  # skipped (not failed) while the repo is private, and starts scoring + badging
+  # automatically once it is public.
+  guard:
+    name: check visibility
+    runs-on: ubuntu-latest
+    outputs:
+      public: ${{ steps.vis.outputs.public }}
+    steps:
+      - name: Resolve repository visibility
+        id: vis
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          vis=$(gh api "repos/${{ github.repository }}" --jq .visibility 2>/dev/null || echo unknown)
+          echo "Repository visibility: $vis"
+          [ "$vis" = "public" ] && echo "public=true" >> "$GITHUB_OUTPUT" || echo "public=false" >> "$GITHUB_OUTPUT"
+
+  analysis:
+    name: analysis
+    needs: guard
+    if: needs.guard.outputs.public == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write # upload the SARIF result to code scanning
+      id-token: write # publish results to the OpenSSF API (for the badge)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a # v2.4.3
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: SARIF file
+          path: results.sarif
+          retention-days: 5
+
+      - name: Upload to code scanning
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
+        with:
+          sarif_file: results.sarif

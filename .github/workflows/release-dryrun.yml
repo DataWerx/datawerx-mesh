@@ -1,0 +1,57 @@
+name: release-dryrun
+
+# Exercise the full GoReleaser build — cross-compiled CLIs, archives, checksums,
+# and the Homebrew cask template — on every change that could break the release,
+# without publishing anything. The real release runs only on a tag and has never
+# run before the first one, so this is the standing proof that the next `vX.Y.Z`
+# will package cleanly instead of failing mid-publish.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".goreleaser.yaml"
+      - "cmd/**"
+      - "pkg/logging/**"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/release-dryrun.yml"
+  pull_request:
+    paths:
+      - ".goreleaser.yaml"
+      - "cmd/**"
+      - "pkg/logging/**"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/release-dryrun.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    name: goreleaser snapshot build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0 # GoReleaser reads git state for versioning
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+      - name: goreleaser snapshot (no publish)
+        uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89 # v7.2.2
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          # --snapshot skips the GitHub release and the Homebrew tap push
+          # (skip_upload: auto). Sign and SBOM are skipped here because cosign
+          # keyless needs the release OIDC token and Syft isn't installed; both
+          # run for real on the tagged release.
+          args: release --snapshot --clean --skip=sign,sbom
+        env:
+          # The cask templates this token; GoReleaser resolves it even in
+          # snapshot mode (the upload itself is still skipped), so give it a
+          # throwaway value so the build doesn't fail on an unset env var.
+          HOMEBREW_TAP_GITHUB_TOKEN: snapshot
+

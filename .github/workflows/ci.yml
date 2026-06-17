@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: build & unit test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+          check-latest: true
+
+      - name: Verify modules are tidy
+        run: |
+          go mod download
+          go mod verify
+
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "These files are not gofmt-clean:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: Build (static, CGO disabled)
+        run: CGO_ENABLED=0 go build ./...
+
+      - name: Unit tests (race + coverage)
+        run: go test -race -count=1 -coverprofile=coverage.out ./...
+
+      - name: Coverage summary
+        run: go tool cover -func=coverage.out | tail -1
+
+      - name: MCS conformance (KEP-1645 contract)
+        # Machine-checks the claims in docs/mcs-conformance.md against the actual
+        # types and pure DNS/allocation logic. Also covered by the unit run above;
+        # named here as an explicit, visible conformance gate.
+        run: go test -count=1 -v ./test/conformance/...
+
+  data-plane:
+    name: data-plane integration (real kernel)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+          check-latest: true
+
+      - name: Warm the module + build cache
+        # Warm the caches as the normal user so the privileged (sudo) test run
+        # below reuses them instead of re-downloading.
+        run: |
+          go mod download
+          go build ./...
+
+      - name: Load required kernel modules (best effort)
+        run: sudo modprobe wireguard iptable_nat || echo "kernel modules unavailable; affected data-plane tests will skip"
+
+      - name: Data-plane tests (real netlink + iptables)
+        # Run as real root (sudo) for CAP_NET_ADMIN/CAP_SYS_ADMIN: netlink,
+        # iptables, and per-test network-namespace creation. We deliberately do
+        # not use rootless `unshare -rn` — hosted runners block the uid_map write
+        # it needs ("Operation not permitted"). Each test creates its own netns
+        # for isolation, so the host's routing/iptables state is untouched, and
+        # tests t.Skip cleanly when a capability or kernel feature is missing.
+        # This never yields false failures. HOME is passed through so root reuses
+        # the caches warmed above.
+        run: |
+          sudo -E env "PATH=$PATH" "HOME=$HOME" \
+            go test -tags dataplane -count=1 \
+            ./pkg/wg/... ./pkg/meshfw/... ./pkg/nat/... ./pkg/mtu/... ./pkg/routed/...
+
+      - name: Shell helper tests
+        run: |
+          bash hack/e2e/patch-coredns_test.sh
+          bash hack/e2e/join_test.sh

@@ -1,0 +1,110 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: meshnetworkpolicies.networking.datawerx.io
+spec:
+  group: networking.datawerx.io
+  names:
+    kind: MeshNetworkPolicy
+    listKind: MeshNetworkPolicyList
+    plural: meshnetworkpolicies
+    singular: meshnetworkpolicy
+    shortNames:
+      - mnp
+  scope: Cluster
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: >-
+            MeshNetworkPolicy is a cluster-scoped, cross-cluster L3/L4 ingress
+            policy for mesh traffic — the free-tier complement to Kubernetes
+            NetworkPolicy. Semantics mirror NetworkPolicy: a destination
+            selected by any policy is default-deny for mesh ingress and
+            reachable only via the union of its ingress allow rules.
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              properties:
+                destinations:
+                  type: array
+                  description: >-
+                    Local CIDRs this policy protects. Empty protects ALL mesh
+                    ingress on this cluster (a default-deny posture).
+                  x-kubernetes-list-type: set
+                  items:
+                    type: string
+                ingress:
+                  type: array
+                  x-kubernetes-list-type: atomic
+                  items:
+                    type: object
+                    properties:
+                      from:
+                        type: array
+                        x-kubernetes-list-type: atomic
+                        items:
+                          type: object
+                          properties:
+                            clusterIDs:
+                              type: array
+                              x-kubernetes-list-type: set
+                              items:
+                                type: string
+                            cidrs:
+                              type: array
+                              x-kubernetes-list-type: set
+                              items:
+                                type: string
+                      ports:
+                        type: array
+                        x-kubernetes-list-type: atomic
+                        items:
+                          type: object
+                          required:
+                            - port
+                          properties:
+                            protocol:
+                              type: string
+                              enum:
+                                - TCP
+                                - UDP
+                                - SCTP
+                            port:
+                              type: integer
+                              format: int32
+                              minimum: 1
+                              maximum: 65535
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - Pending
+                    - Ready
+                    - Error
+                message:
+                  type: string
+                observedGeneration:
+                  type: integer
+                  format: int64

@@ -1,0 +1,172 @@
+---
+# DataWerx Mesh node agent — local/dev deployment.
+#
+# This manifest is intentionally a single, self-contained file for local kind
+# verification. It deploys the agent as a DaemonSete) with the RBAC the open-core
+# LocalGitOpsClient and MeshPeerReconciler need:
+#   * Read/write MeshPeer objects. The reconciler adds a finalizer and patches status
+#   * The data plane requires NET_ADMIN to program dwx-mesh0 and host routes. For
+#     creating the wireguard device, effectively privileged, to program dwx-mesh0 
+#     and host routes.
+#
+# It is NOT a production manifest: it runs privileged as root for the simplest
+# possible local setup. A real deployment would drop to a minimal cap set,
+# project the WireGuard private key from a Secret, and pin resource limits.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: datawerx-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dwx-mesh-agent
+  namespace: datawerx-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dwx-mesh-agent
+rules:
+  # MeshPeer objects: the reconciler reads them, adds a finalizer (update), and
+  # the LocalGitOpsClient lists/watches them.
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["meshpeers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Status subresource: phase / lastHandshakeTime / message.
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["meshpeers/status"]
+    verbs: ["get", "update", "patch"]
+  # Finalizers subresource.
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["meshpeers/finalizers"]
+    verbs: ["update"]
+  # MeshNetworkPolicy: the mesh firewall reconciler lists/watches policies and
+  # patches their status. It is registered whenever a mesh ingress interface
+  # exists (the WireGuard device in standalone mode, or DataWerx_OVERLAY_INTERFACE
+  # in routed mode). Without this grant, the policy informer can never sync, which
+  # stalls the manager's shared cache and blocks ALL controllers, including
+  # MeshPeer, from ever reconciling. Kept in lockstep with
+  # charts/datawerx-mesh/templates/rbac.yaml.
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["meshnetworkpolicies"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["meshnetworkpolicies/status"]
+    verbs: ["get", "update", "patch"]
+  # Controller-runtime may emit events for the reconcile loop.
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  # Cross-cluster DNS (MCS) pipeline.
+  # ServiceExport: validated + finalizer + status conditions.
+  - apiGroups: ["multicluster.x-k8s.io"]
+    resources: ["serviceexports"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["multicluster.x-k8s.io"]
+    resources: ["serviceexports/status", "serviceexports/finalizers"]
+    verbs: ["get", "update", "patch"]
+  # ServiceImport: produced by the import controller.
+  - apiGroups: ["multicluster.x-k8s.io"]
+    resources: ["serviceimports"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["multicluster.x-k8s.io"]
+    resources: ["serviceimports/status"]
+    verbs: ["get", "update", "patch"]
+  # EndpointExport: the broker-less wire format (published + consumed).
+  - apiGroups: ["networking.datawerx.io"]
+    resources: ["endpointexports"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Services + EndpointSlices: read to derive exported endpoints.
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dwx-mesh-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dwx-mesh-agent
+subjects:
+  - kind: ServiceAccount
+    name: dwx-mesh-agent
+    namespace: datawerx-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: dwx-mesh-agent
+  namespace: datawerx-system
+  labels:
+    app.kubernetes.io/name: dwx-mesh-agent
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dwx-mesh-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dwx-mesh-agent
+    spec:
+      serviceAccountName: dwx-mesh-agent
+      # Program the host's network stack directly so the wireguard device and
+      # routes land where real traffic flows.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: agent
+          image: datawerx/mesh-agent:dev
+          # The image is side-loaded into kind with `kind load docker-image`,
+          # so never attempt to pull it from a registry.
+          imagePullPolicy: Never
+          args:
+            - "--health-probe-bind-address=:8081"
+            - "--metrics-bind-address=:8080"
+          env:
+            # This cluster's own pod and service ranges, so the agent can detect
+            # when a remote peer's CIDRs overlap and would hijack local traffic.
+            # These match the kind defaults (pod 10.244.0.0/16, svc 10.96.0.0/16).
+            - name: DataWerx_LOCAL_CIDRS
+              value: "10.244.0.0/16,10.96.0.0/16"
+          ports:
+            - name: health
+              containerPort: 8081
+            - name: metrics
+              containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+              ephemeral-storage: 64Mi
+            limits:
+              memory: 128Mi
+              ephemeral-storage: 256Mi
+          securityContext:
+            # Creating a kernel wireguard link and installing routes needs broad
+            # privileges. We grant the specific capabilities the data plane needs
+            # (NET_ADMIN to manage dwx-mesh0 and routes, SYS_MODULE to load the
+            # wireguard module) and run as root rather than fully privileged; the
+            # distroless image's default nonroot uid is overridden here.
+            runAsNonRoot: false
+            runAsUser: 0
+            capabilities:
+              add: ["NET_ADMIN", "SYS_MODULE"]
+      terminationGracePeriodSeconds: 10

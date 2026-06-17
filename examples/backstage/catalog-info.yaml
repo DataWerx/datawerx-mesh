@@ -1,0 +1,66 @@
+# Backstage catalog descriptor for DataWerx Mesh. Register this file's URL in
+# your Backstage instance (Catalog → Register Existing Component) to surface the
+# mesh, its CLIs, and its API in the software catalog. Adjust owner/system to
+# match your org's catalog model.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: datawerx-mesh
+  title: DataWerx Mesh
+  description: >
+    Open-core, broker-less multi-cluster Kubernetes networking orchestrator. A
+    per-node WireGuard agent converges the kernel data plane toward declarative
+    MeshPeer resources and links disparate clusters over encrypted tunnels.
+  annotations:
+    github.com/project-slug: datawerx/datawerx
+    backstage.io/techdocs-ref: dir:../../docs
+  tags:
+    - kubernetes
+    - multi-cluster
+    - networking
+    - wireguard
+    - mcs
+  links:
+    - url: https://github.com/datawerx/datawerx
+      title: Source
+      icon: github
+    - url: https://github.com/datawerx/datawerx/tree/main/docs
+      title: Documentation
+      icon: docs
+spec:
+  type: service
+  lifecycle: experimental
+  owner: platform-networking
+  providesApis:
+    - datawerx-meshpeer-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: datawerx-meshpeer-api
+  title: DataWerx MeshPeer & MCS CRDs
+  description: >
+    The declarative API of the mesh: the MeshPeer and MeshNetworkPolicy CRDs and
+    the Multi-Cluster Services (KEP-1645) ServiceExport/ServiceImport types the
+    agent reconciles.
+  tags:
+    - kubernetes
+    - crd
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: platform-networking
+  definition:
+    $text: ../../config/crd/networking.datawerx.io_meshpeers.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: datawerx-mesh-agent
+  title: DataWerx Mesh agent (DaemonSet)
+  description: The node agent DaemonSet installed by the datawerx-mesh Helm chart.
+spec:
+  type: kubernetes-daemonset
+  owner: platform-networking
+  dependencyOf:
+    - component:datawerx-mesh

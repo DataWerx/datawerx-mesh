@@ -1,0 +1,100 @@
+# GoReleaser builds and publishes the operator-facing CLIs — dwxctl and the
+# dwx-mcp MCP server — as cross-platform, checksummed, SBOM'd, and cosign-signed
+# archives, plus a Homebrew formula. The agent itself ships as the signed
+# container image and Helm chart cut by .github/workflows/release.yml; this is
+# the half an operator installs on a laptop.
+#
+# Validate locally with `goreleaser check`; the release runs in CI on a tag.
+version: 2
+
+project_name: datawerx
+
+builds:
+  - id: dwxctl
+    main: ./cmd/dwxctl
+    binary: dwxctl
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w
+      - -X github.com/datawerx/datawerx/pkg/logging.Version={{ .Version }}
+
+  - id: dwx-mcp
+    main: ./cmd/dwx-mcp
+    binary: dwx-mcp
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w
+      - -X github.com/datawerx/datawerx/pkg/logging.Version={{ .Version }}
+
+archives:
+  - id: cli
+    ids: [dwxctl, dwx-mcp]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files: [README.md, LICENSE, docs/install.md]
+
+checksum:
+  name_template: "checksums.txt"
+
+# A software bill of materials per archive, for supply-chain auditing.
+sboms:
+  - artifacts: archive
+
+# Keyless cosign signing of the checksum file (OIDC in CI); the whole archive set
+# is verifiable from the one signed checksums.txt.
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--yes"
+      - "--output-signature=${signature}"
+      - "--output-certificate=${certificate}"
+      - "${artifact}"
+    artifacts: checksum
+    output: true
+
+homebrew_casks:
+  - name: dwxctl
+    ids: [cli]
+    repository:
+      owner: datawerx
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/datawerx/datawerx"
+    description: "DataWerx Mesh operator CLI (dwxctl) and read-only MCP server (dwx-mcp)"
+    license: "Apache-2.0"
+    # Skip the tap commit on a snapshot/dirty build so `goreleaser --snapshot`
+    # stays local-only.
+    skip_upload: auto
+    # The archive carries both CLIs; install them together.
+    binaries: [dwxctl, dwx-mcp]
+
+release:
+  github:
+    owner: datawerx
+    name: datawerx
+  # The image/chart release job also attaches assets to this tag's Release; do
+  # not let goreleaser wipe them.
+  mode: append
+  footer: |
+    ## Install
+
+    See [docs/install.md](https://github.com/datawerx/datawerx/blob/main/docs/install.md)
+    for Homebrew, direct download, cosign verification, and the `dwx-mcp` MCP
+    server setup.
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude: ["^docs:", "^test:", "^chore:", "merge conflict", "Merge pull request"]
