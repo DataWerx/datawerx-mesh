@@ -21,13 +21,16 @@
 #   DWXCTL                 path to a prebuilt dwxctl (else built from source)
 set -euo pipefail
 
+# Shared console styling (say/ok + color setup).
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib.sh"
+
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "${HERE}/../.." && pwd)
 
 # Build dwxctl once unless a binary was provided.
 if [[ -z "${DWXCTL:-}" ]]; then
   DWXCTL="$(mktemp -d)/dwxctl"
-  echo "==> building dwxctl"
+  say "🔧 building dwxctl"
   ( cd "${REPO_ROOT}" && CGO_ENABLED=0 go build -o "${DWXCTL}" ./cmd/dwxctl )
 fi
 
@@ -39,12 +42,12 @@ join() {
   token=$("${DWXCTL}" join export \
     --cluster-id "${id}" --public-key "${pub}" --endpoint "${ep}" \
     --pod-cidrs "${pod}" --service-cidrs "${svc}")
-  echo "==> [${importer_ctx}] importing bundle for ${id}"
+  say "📥 [${importer_ctx}] importing bundle for ${id}"
   "${DWXCTL}" join import --context "${importer_ctx}" --bundle "${token}"
 }
 
-echo "==> forming the mesh with dwxctl join (no hand-written MeshPeers)"
+say "🔗 forming the mesh with dwxctl join (no hand-written MeshPeers)"
 # Each cluster imports the *other* cluster's bundle.
 join "${ID_B}" "${PUB_B}" "${EP_B}" "${POD_B}" "${SVC_B}" "${CTX_A}"
 join "${ID_A}" "${PUB_A}" "${EP_A}" "${POD_A}" "${SVC_A}" "${CTX_B}"
-echo "==> mesh formed via join"
+ok "🎉 mesh formed via join"

@@ -8,6 +8,9 @@
 # It's safe to re-run since every step is idempotent.
 set -euo pipefail
 
+# Shared console styling (say/ok/die + color setup).
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib.sh"
+
 CLUSTER_A=${CLUSTER_A:-dwx-a}
 CLUSTER_B=${CLUSTER_B:-dwx-b}
 CTX_A="kind-${CLUSTER_A}"
@@ -20,7 +23,7 @@ ns() { # ensure namespace exists on a context
     | kubectl --context "$1" apply -f - >/dev/null
 }
 
-echo "==> [${CTX_A}] deploy a headless echo Service in namespace ${NS}"
+say "🚀 [${CTX_A}] deploy a headless echo Service in namespace ${NS}"
 ns "${CTX_A}"
 # http-echo:1.0 is a distroless image whose entrypoint is the binary, so the
 # flags go in `args` (appended to the entrypoint) — NOT in `command`, which
@@ -56,14 +59,14 @@ spec:
 YAML
 kubectl --context "${CTX_A}" -n "${NS}" rollout status deployment/echo --timeout=90s
 
-echo "==> [${CTX_A}] export the Service with the standard MCS ServiceExport"
+say "📤 [${CTX_A}] export the Service with the standard MCS ServiceExport"
 kubectl --context "${CTX_A}" apply -f - <<'YAML'
 apiVersion: multicluster.x-k8s.io/v1alpha1
 kind: ServiceExport
 metadata: { name: echo, namespace: demo }
 YAML
 
-echo "==> [${CTX_A}] wait for the controller to generate the EndpointExport"
+say "⏳ [${CTX_A}] wait for the controller to generate the EndpointExport"
 for _ in $(seq 1 30); do
   [ -n "$(kubectl --context "${CTX_A}" -n "${NS}" get endpointexports -o name 2>/dev/null)" ] && break
   sleep 1
@@ -73,16 +76,16 @@ kubectl --context "${CTX_A}" -n "${NS}" get endpointexports
 # Free tier: your GitOps pipeline mirrors EndpointExports between clusters.
 # Here we copy them by hand. Delete any prior mirror first so re-runs don't
 # trip over the server-assigned metadata carried in `get -o yaml`.
-echo "==> [${CTX_B}] mirror EndpointExports from ${CTX_A} (GitOps does this in prod)"
+say "🔄 [${CTX_B}] mirror EndpointExports from ${CTX_A} (GitOps does this in prod)"
 ns "${CTX_B}"
 kubectl --context "${CTX_B}" -n "${NS}" delete endpointexport --all --ignore-not-found >/dev/null
 kubectl --context "${CTX_A}" -n "${NS}" get endpointexports -o yaml \
   | kubectl --context "${CTX_B}" -n "${NS}" apply -f -
 
-echo "==> [${CTX_B}] point CoreDNS at the mesh DNS responder"
+say "🌐 [${CTX_B}] point CoreDNS at the mesh DNS responder"
 "${REPO_ROOT}/hack/e2e/patch-coredns.sh" "${CTX_B}"
 
-echo "==> [${CTX_B}] calling echo.${NS}.svc.clusterset.local by name from cluster B"
+say "🔗 [${CTX_B}] calling echo.${NS}.svc.clusterset.local by name from cluster B"
 kubectl --context "${CTX_B}" -n "${NS}" delete pod probe --ignore-not-found >/dev/null 2>&1 || true
 # Retry inside the pod. The ServiceImport and DNS take a moment to converge.
 kubectl --context "${CTX_B}" -n "${NS}" run probe --restart=Never \
@@ -103,8 +106,8 @@ echo "------------------------------------------------------------"
 kubectl --context "${CTX_B}" -n "${NS}" delete pod probe --ignore-not-found >/dev/null 2>&1 || true
 
 if [ "${phase}" = "Succeeded" ]; then
-  echo "✅ Cross-cluster call worked: a Service in cluster A, reached by name from cluster B."
+  ok "Cross-cluster call worked: a Service in cluster A, reached by name from cluster B."
 else
-  echo "❌ The cross-cluster call failed — see the output above and docs/troubleshooting.md." >&2
+  die "The cross-cluster call failed — see the output above and docs/troubleshooting.md."
   exit 1
 fi

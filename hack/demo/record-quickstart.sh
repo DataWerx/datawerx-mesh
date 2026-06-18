@@ -9,11 +9,14 @@
 # kubectl, helm, wg, and the `wireguard` kernel module. Run from the repo root.
 set -euo pipefail
 
+# Shared console styling (say/ok/die + color setup).
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib.sh"
+
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 OUT="${1:-${REPO_ROOT}/docs/assets/quickstart.cast}"
 
 command -v asciinema >/dev/null || {
-  echo "error: asciinema not found — install it (https://asciinema.org/docs/install)" >&2
+  die "asciinema not found — install it (https://asciinema.org/docs/install)"
   exit 1
 }
 mkdir -p "$(dirname "$OUT")"
@@ -30,6 +33,6 @@ hack/demo/quickstart.sh
 echo
 SCRIPT
 
-echo "Recording quickstart to ${OUT} …"
+say "🎬 Recording quickstart to ${OUT} …"
 asciinema rec --overwrite --command "bash -lc '${DEMO}'" "$OUT"
-echo "Done. Convert to GIF with:  agg ${OUT} ${OUT%.cast}.gif"
+ok "🎞️  Done. Convert to GIF with:  agg ${OUT} ${OUT%.cast}.gif"

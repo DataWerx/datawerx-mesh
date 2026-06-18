@@ -9,6 +9,9 @@
 # not execute any kubectl calls.
 set -euo pipefail
 
+# Shared console styling (say/ok/die + color setup).
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib.sh"
+
 # corefile_strip_zone <corefile>
 # Echo the Corefile with any existing clusterset.local server block removed. The
 # block is flat, no nested braces, so we drop everything from the zone header
@@ -48,18 +51,18 @@ main() {
   dns_ip=$(kubectl --context "${ctx}" -n datawerx-system get svc datawerx-mesh-dns \
     -o jsonpath='{.spec.clusterIP}')
   if [[ -z "${dns_ip}" ]]; then
-    echo "datawerx-mesh-dns Service has no ClusterIP yet" >&2
+    die "datawerx-mesh-dns Service has no ClusterIP yet"
     exit 1
   fi
 
-  echo "==> [${ctx}] forwarding clusterset.local -> ${dns_ip}"
+  say "🌐 [${ctx}] forwarding clusterset.local -> ${dns_ip}"
 
   local corefile
   corefile=$(kubectl --context "${ctx}" -n kube-system get configmap coredns \
     -o jsonpath='{.data.Corefile}')
 
   if corefile_is_current "${corefile}" "${dns_ip}"; then
-    echo "    clusterset.local -> ${dns_ip} already current"
+    ok "   clusterset.local -> ${dns_ip} already current"
   else
     corefile=$(corefile_ensure_zone "${corefile}" "${dns_ip}")
     # NOTE: this rewrites the configmap's .data to just Corefile,
