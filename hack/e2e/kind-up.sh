@@ -18,6 +18,9 @@
 # the ClusterSetIP DNAT work lands.
 set -euo pipefail
 
+# Shared console styling (say/ok/warn/die + color setup).
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib.sh"
+
 CLUSTER_A=${CLUSTER_A:-dwx-a}
 CLUSTER_B=${CLUSTER_B:-dwx-b}
 IMAGE=${IMAGE:-datawerx/mesh-agent:dev}
@@ -40,7 +43,7 @@ if [ "${OVERLAP:-0}" = "1" ]; then
   # never collide with the kind underlay. Must match ovlRemapPool in
   # test/e2e/overlap_test.go.
   REMAP="${REMAP_CIDR:-100.64.0.0/10}"
-  echo "==> OVERLAP mode: both clusters on ${POD_A} / ${SVC_A}, remap pool ${REMAP}"
+  say "🔀 OVERLAP mode: both clusters on ${POD_A} / ${SVC_A}, remap pool ${REMAP}"
 fi
 
 # ROUTED mode: instead of DataWerx owning a WireGuard device, run the agent in
@@ -50,10 +53,10 @@ fi
 DPLANE=""
 if [ "${ROUTED:-0}" = "1" ]; then
   DPLANE="routed"
-  echo "==> ROUTED mode: BYO overlay = shared kind docker network (no WireGuard device)"
+  say "🛣️  ROUTED mode: BYO overlay = shared kind docker network (no WireGuard device)"
 fi
 
-echo "==> building agent image ${IMAGE}"
+say "🔧 building agent image ${IMAGE}"
 docker build -t "${IMAGE}" "${REPO_ROOT}"
 
 kind_config() {
@@ -70,10 +73,10 @@ EOF
 create_cluster() {
   local name=$1 pod=$2 svc=$3
   if ! kind get clusters | grep -qx "${name}"; then
-    echo "==> creating kind cluster ${name} (pod ${pod}, svc ${svc})"
+    say "🚀 creating kind cluster ${name} (pod ${pod}, svc ${svc})"
     kind_config "${pod}" "${svc}" | kind create cluster --name "${name}" --config -
   fi
-  echo "==> loading ${IMAGE} into ${name}"
+  say "📦 loading ${IMAGE} into ${name}"
   kind load docker-image "${IMAGE}" --name "${name}"
 }
 
@@ -89,7 +92,7 @@ node_ip() {
 }
 IP_A=$(node_ip "${CLUSTER_A}")
 IP_B=$(node_ip "${CLUSTER_B}")
-echo "==> ${CLUSTER_A} endpoint ${IP_A}:51820 / ${CLUSTER_B} endpoint ${IP_B}:51820"
+say "📡 ${CLUSTER_A} endpoint ${IP_A}:51820 / ${CLUSTER_B} endpoint ${IP_B}:51820"
 
 # In ROUTED mode the "overlay" is the shared docker network. A real overlay
 # (Tailscale/NetBird) plus the gateway node forwards each cluster's pod/service
@@ -100,7 +103,7 @@ echo "==> ${CLUSTER_A} endpoint ${IP_A}:51820 / ${CLUSTER_B} endpoint ${IP_B}:51
 #     (DOCKER-USER is traversed before docker's default-drop rules).
 # This is the kind stand-in for what an overlay's gateway provides in production.
 if [ "${ROUTED:-0}" = "1" ]; then
-  echo "==> [routed] enabling cross-cluster forwarding (kind stand-in for overlay gateways)"
+  say "🔁 [routed] enabling cross-cluster forwarding (kind stand-in for overlay gateways)"
   # These are load-bearing for the data path. Do NOT swallow failures with
   # `|| true`: a silently-failed setup looks healthy until the e2e suite fails
   # mysteriously. `set -e` aborts the bring-up on any real error instead.
@@ -132,7 +135,7 @@ PRIV_B=$(wg genkey); PUB_B=$(echo "${PRIV_B}" | wg pubkey)
 
 deploy() {
   local ctx=$1 cluster_id=$2 priv=$3 local_cidrs=$4
-  echo "==> [${ctx}] installing CRDs + agent"
+  say "📥 [${ctx}] installing CRDs + agent"
   kubectl --context "kind-${ctx}" apply -f "${REPO_ROOT}/config/crd/"
   kubectl --context "kind-${ctx}" apply -f "${REPO_ROOT}/deploy/agent.yaml"
 
@@ -183,7 +186,7 @@ EOF
 
 if [[ "${JOIN:-0}" == "1" ]]; then
   # Form the mesh with `dwxctl join` instead of hand-authored MeshPeers (0006).
-  echo "==> wiring reciprocal MeshPeers via dwxctl join"
+  say "🔗 wiring reciprocal MeshPeers via dwxctl join"
   CTX_A="kind-${CLUSTER_A}" CTX_B="kind-${CLUSTER_B}" \
     ID_A=cluster-a ID_B=cluster-b \
     PUB_A="${PUB_A}" PUB_B="${PUB_B}" \
@@ -191,14 +194,15 @@ if [[ "${JOIN:-0}" == "1" ]]; then
     POD_A="${POD_A}" POD_B="${POD_B}" SVC_A="${SVC_A}" SVC_B="${SVC_B}" \
     bash "${REPO_ROOT}/hack/e2e/join.sh"
 else
-  echo "==> wiring reciprocal MeshPeers"
+  say "🔗 wiring reciprocal MeshPeers"
   meshpeer "${CLUSTER_A}" cluster-b "${PUB_B}" "${IP_B}:51820" "${POD_B}" "${SVC_B}"
   meshpeer "${CLUSTER_B}" cluster-a "${PUB_A}" "${IP_A}:51820" "${POD_A}" "${SVC_A}"
 fi
 
+ok "🎉 Two-cluster mesh is up."
 cat <<EOF
 
-Two-cluster mesh is up. Run the e2e suite with:
+Run the e2e suite with:
 
   E2E_CONTEXT_A=kind-${CLUSTER_A} E2E_CONTEXT_B=kind-${CLUSTER_B} \\
     go test -tags e2e -timeout 30m ./test/e2e/...

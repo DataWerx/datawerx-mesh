@@ -21,6 +21,9 @@
 #   * You have an agent image the nodes can pull (--image), or have side-loaded one.
 set -euo pipefail
 
+# Shared console styling (say/ok/warn/die + color setup).
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib.sh"
+
 CLUSTER_ID=""
 CONTEXT=""
 IFACE="tailscale0"
@@ -59,13 +62,13 @@ while [ $# -gt 0 ]; do
     --namespace) NAMESPACE="$2"; shift 2;;
     --remap) REMAP="$2"; shift 2;;
     -h|--help) usage; exit 0;;
-    *) echo "unknown arg: $1" >&2; usage; exit 1;;
+    *) die "unknown arg: $1"; usage; exit 1;;
   esac
 done
 
-[ -n "${CLUSTER_ID}" ] || { echo "error: --cluster-id is required" >&2; usage; exit 1; }
-command -v kubectl >/dev/null || { echo "error: kubectl not found" >&2; exit 1; }
-command -v helm >/dev/null || { echo "error: helm not found" >&2; exit 1; }
+[ -n "${CLUSTER_ID}" ] || { die "--cluster-id is required"; usage; exit 1; }
+command -v kubectl >/dev/null || { die "kubectl not found"; exit 1; }
+command -v helm >/dev/null || { die "helm not found"; exit 1; }
 
 KCTX=(); [ -n "${CONTEXT}" ] && KCTX=(--kube-context "${CONTEXT}")
 KUBECTL=(kubectl); [ -n "${CONTEXT}" ] && KUBECTL=(kubectl --context "${CONTEXT}")
@@ -73,7 +76,7 @@ KUBECTL=(kubectl); [ -n "${CONTEXT}" ] && KUBECTL=(kubectl --context "${CONTEXT}
 # Helm --set parses commas as list separators, so escape them in CIDR lists.
 esc() { printf '%s' "$1" | sed 's/,/\\,/g'; }
 
-echo "==> installing DataWerx agent (routed mode) into ${CLUSTER_ID} (iface ${IFACE})"
+say "🚀 installing DataWerx agent (routed mode) into ${CLUSTER_ID} (iface ${IFACE})"
 HELM_ARGS=(
   upgrade --install dwx "${CHART}"
   "${KCTX[@]}"
@@ -87,13 +90,13 @@ HELM_ARGS=(
 [ -n "${REMAP}" ] && HELM_ARGS+=(--set remapCIDR="${REMAP}")
 helm "${HELM_ARGS[@]}"
 
-echo "==> waiting for the agent to roll out"
+say "⏳ waiting for the agent to roll out"
 "${KUBECTL[@]}" -n "${NAMESPACE}" rollout status daemonset/dwx-datawerx-mesh --timeout=120s 2>/dev/null \
   || "${KUBECTL[@]}" -n "${NAMESPACE}" rollout status daemonset -l app.kubernetes.io/name=datawerx-mesh --timeout=120s
 
 # The agent logs the overlay IP it discovered on IFACE; pull it from a pod's logs
 # so the operator doesn't have to look it up.
-echo "==> discovering this cluster's overlay address from the agent logs"
+say "🔍 discovering this cluster's overlay address from the agent logs"
 POD=$("${KUBECTL[@]}" -n "${NAMESPACE}" get pods -l app.kubernetes.io/name=datawerx-mesh -o name | head -1 || true)
 OVERLAY_IP=""
 if [ -n "${POD}" ]; then
@@ -107,7 +110,7 @@ SVC_CIDR="${LOCAL_CIDRS##*,}"
 echo
 echo "================================================================"
 if [ -n "${OVERLAY_IP}" ]; then
-  echo "Cluster '${CLUSTER_ID}' is joined. Its overlay address is: ${OVERLAY_IP}"
+  ok "🎉 Cluster '${CLUSTER_ID}' is joined. Its overlay address is: ${OVERLAY_IP}"
   echo
   echo "Apply this MeshPeer in EVERY OTHER cluster so they can reach ${CLUSTER_ID}:"
   echo "----------------------------------------------------------------"
@@ -125,7 +128,7 @@ spec:
 YAML
   echo "----------------------------------------------------------------"
 else
-  echo "Cluster '${CLUSTER_ID}' is joined, but the overlay address could not be"
+  warn "Cluster '${CLUSTER_ID}' is joined, but the overlay address could not be"
   echo "auto-read from the agent logs. Find a node's ${IFACE} IP manually:"
   echo "    tailscale ip -4        # or: ip -4 addr show ${IFACE}"
   echo "and use it as spec.endpoint in the MeshPeer for '${CLUSTER_ID}' on peers."

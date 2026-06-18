@@ -4,10 +4,14 @@
 # without touching an API server. Run: bash hack/e2e/join_test.sh
 set -euo pipefail
 
+# Shared console styling (say/pass/failmsg + color setup).
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib.sh"
+
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "${HERE}/../.." && pwd)
 
 DWXCTL="$(mktemp -d)/dwxctl"
+say "🔧 building dwxctl"
 ( cd "${REPO_ROOT}" && CGO_ENABLED=0 go build -o "${DWXCTL}" ./cmd/dwxctl )
 
 # A valid 32-byte (all-zero) Curve25519 public key in base64 — parses as a
@@ -17,9 +21,9 @@ PUB="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
 fail=0
 contains() { # contains <name> <haystack> <needle>
   if [[ "$2" == *"$3"* ]]; then
-    echo "ok   - $1"
+    pass "$1"
   else
-    echo "FAIL - $1"
+    failmsg "$1"
     echo "  expected to contain: |$3|"
     echo "  in: |$2|"
     fail=1
@@ -27,10 +31,10 @@ contains() { # contains <name> <haystack> <needle>
 }
 expect_fail() { # expect_fail <name> <cmd...>
   if "${@:2}" >/dev/null 2>&1; then
-    echo "FAIL - $1 (expected non-zero exit)"
+    failmsg "$1 (expected non-zero exit)"
     fail=1
   else
-    echo "ok   - $1"
+    pass "$1"
   fi
 }
 
@@ -60,7 +64,7 @@ expect_fail "rejects a non-bundle token" "${DWXCTL}" join import --bundle "not-a
 expect_fail "rejects a foreign version"  "${DWXCTL}" join import --bundle "dwxmesh.v9.AAAA" --dry-run
 
 if [[ "${fail}" -ne 0 ]]; then
-  echo "FAILED"
+  printf '%s💥 FAILED%s\n' "${_c_red}${_c_bold}" "${_c_reset}"
   exit 1
 fi
-echo "PASSED"
+printf '%s🎉 PASSED%s\n' "${_c_green}${_c_bold}" "${_c_reset}"
