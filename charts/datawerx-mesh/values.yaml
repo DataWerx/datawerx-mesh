@@ -2,7 +2,7 @@
 
 image:
   # Published by the release workflow on each tagged release.
-  repository: ghcr.io/datawerx/datawerx/mesh-agent
+  repository: ghcr.io/datawerx/datawerx-mesh/mesh-agent
   # tag defaults to the chart's appVersion when empty.
   tag: ""
   pullPolicy: IfNotPresent

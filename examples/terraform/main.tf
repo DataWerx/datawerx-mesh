@@ -7,7 +7,7 @@ resource "helm_release" "datawerx_mesh" {
   namespace        = var.namespace
   create_namespace = var.create_namespace
 
-  repository = "oci://ghcr.io/datawerx/datawerx/charts"
+  repository = "oci://ghcr.io/datawerx/datawerx-mesh/charts"
   chart      = "datawerx-mesh"
   version    = var.chart_version
 

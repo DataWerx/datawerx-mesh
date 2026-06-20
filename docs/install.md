@@ -7,9 +7,11 @@ DataWerx ships two operator-facing command-line tools:
 - **`dwx-mcp`** — a read-only [Model Context Protocol](https://modelcontextprotocol.io)
   server that exposes the mesh's state to any MCP-speaking agent.
 
-The agent itself (the DaemonSet) is installed separately via the Helm chart or
-`deploy/agent.yaml`; see the [quickstart](quickstart.md). This page is about the
-CLIs you run from a laptop or CI.
+The agent itself (the DaemonSet) is installed separately via the Helm chart
+(`charts/datawerx-mesh`, published to GHCR) — the single-file `deploy/agent.yaml`
+is a local **kind/dev** manifest, not a production install. See the
+[quickstart](quickstart.md). This page is about the CLIs you run from a laptop or
+CI.
 
 ## Homebrew (macOS / Linux)
 

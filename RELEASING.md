@@ -7,8 +7,8 @@ two workflows that together produce everything a user installs.
 
 | Artifact | Built by | Published to |
 |----------|----------|--------------|
-| Multi-arch agent image (signed, with SBOM) | `.github/workflows/release.yml` | `ghcr.io/datawerx/datawerx/mesh-agent` |
-| Helm chart (OCI) | `.github/workflows/release.yml` | `oci://ghcr.io/datawerx/datawerx/charts` |
+| Multi-arch agent image (signed, with SBOM) | `.github/workflows/release.yml` | `ghcr.io/datawerx/datawerx-mesh/mesh-agent` |
+| Helm chart (OCI) | `.github/workflows/release.yml` | `oci://ghcr.io/datawerx/datawerx-mesh/charts` |
 | `dwxctl` + `dwx-mcp` archives (checksummed, SBOM'd, cosign-signed) | GoReleaser (`.goreleaser.yaml`) | the GitHub Release |
 | Homebrew cask | GoReleaser | `datawerx/homebrew-tap` |
 

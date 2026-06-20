@@ -181,7 +181,7 @@ That's a working two-cluster mesh with a service called across it. The **[full q
 Install the published chart straight from GHCR — no clone needed:
 
 ```sh
-helm install dwx oci://ghcr.io/datawerx/datawerx/charts/datawerx-mesh \
+helm install dwx oci://ghcr.io/datawerx/datawerx-mesh/charts/datawerx-mesh \
   -n datawerx-system --create-namespace \
   --set clusterID=cluster-a
 ```

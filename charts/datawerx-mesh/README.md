@@ -17,7 +17,7 @@ Deploys the DataWerx Mesh node agent as a DaemonSet, with the CRDs, RBAC, and
 From the published chart on GitHub Container Registry (GHCR), no clone needed:
 
 ```sh
-helm install dwx oci://ghcr.io/datawerx/datawerx/charts/datawerx-mesh \
+helm install dwx oci://ghcr.io/datawerx/datawerx-mesh/charts/datawerx-mesh \
   --namespace datawerx-system --create-namespace \
   --set clusterID=cluster-a \
   --set wireguard.privateKey.existingSecret=dwx-wg \
@@ -41,7 +41,7 @@ helm install dwx ./charts/datawerx-mesh -n datawerx-system \
 
 | Key | Description | Default |
 |-----|-------------|---------|
-| `image.repository` / `image.tag` | Agent image (tag defaults to chart `appVersion`) | `ghcr.io/datawerx/datawerx/mesh-agent` / chart appVersion |
+| `image.repository` / `image.tag` | Agent image (tag defaults to chart `appVersion`) | `ghcr.io/datawerx/datawerx-mesh/mesh-agent` / chart appVersion |
 | `clusterID` | This cluster's mesh ID (`DataWerx_CLUSTER_ID`) | `""` |
 | `localCIDRs` | Local pod/service ranges for overlap detection | `10.244.0.0/16,10.96.0.0/16` |
 | `clusterSetCIDR` | ClusterSetIP allocation range | `""` (→ `241.0.0.0/8`) |

@@ -12,33 +12,9 @@ called out as such.
 
 ## [Unreleased]
 
-Changes landed on `main` that have not yet been cut into a tagged release.
+Nothing yet — changes land here after v0.1.0.
 
-### Fixed
-
-- Terraform module: pinned the `helm`/`kubernetes` providers below 3.0, since the
-  module uses the `set { }` block form of `helm_release` that the v3 provider
-  replaced. A new `ecosystem` CI workflow now validates the GoReleaser config,
-  the Terraform module (`fmt` + `validate`), and the Artifact Hub / Backstage
-  manifests so these artifacts can't silently rot.
-
-### Added
-
-- Active-probe status writeback: the prober records its verdict onto `MeshPeer`
-  status (`lastProbeAttempt`, `lastProbeTime`), and `dwxctl slo` /
-  `mesh_connectivity` now prefer probe-observed liveness over the WireGuard
-  handshake when it is recent. A peer that handshook but whose application probe
-  fails reports **Impaired**; disabling the prober reverts to handshake-observed
-  liveness on its own.
-- MCS EndpointSlice mirroring (KEP-1645): a headless `ServiceImport`'s
-  cross-cluster endpoints are now materialized as `discovery.k8s.io`
-  `EndpointSlice`s in the consuming cluster, labeled
-  `multicluster.kubernetes.io/service-name` and `…/source-cluster`, so native
-  consumers and an MCS-aware kube-proxy discover them through the standard
-  surface, not only the clusterset DNS responder. Closes the documented MCS
-  conformance delta for headless services.
-
-## [0.1.0] — initial public release
+## [0.1.0] — 2026-06-20
 
 The first release: a working, broker-less, multi-cluster Kubernetes networking
 mesh, the read-only intelligence surfaces over it, and the supply-chain pipeline
@@ -60,8 +36,12 @@ that ships it.
   owning a device.
 - **Cross-cluster services (MCS, KEP-1645).** `ServiceExport`/`ServiceImport`,
   the broker-less `EndpointExport` wire format, deterministic hash-based
-  ClusterSetIP allocation, a `clusterset.local` DNS responder, headless
-  `EndpointSlice` propagation, and a kube-proxy-style iptables data plane.
+  ClusterSetIP allocation, a `clusterset.local` DNS responder, and a
+  kube-proxy-style iptables data plane. Headless `ServiceImport`s also mirror
+  their cross-cluster endpoints as `discovery.k8s.io` `EndpointSlice`s labeled
+  `multicluster.kubernetes.io/service-name` and `…/source-cluster`, so native
+  consumers and an MCS-aware kube-proxy discover them through the standard
+  surface, not only the DNS responder.
 - **Mesh firewall.** `MeshNetworkPolicy` compiled by the pure `pkg/meshfw` into
   an iptables filter-table applier.
 - **Overlapping-CIDR remap.** Opt-in 1:1 NETMAP of conflicting remote ranges into
@@ -74,6 +54,12 @@ that ships it.
   health `verify`, mesh `snapshot`, rule-based `diagnose`, zero-friction `join`,
   the change-impact `policy --dry-run`, the dependency `graph`, the expected
   reachability matrix (`reach`), and the connectivity golden signals (`slo`).
+- **Active synthetic probing.** An opt-in prober (`DataWerx_PROBE_ENABLE`) writes
+  its verdict back onto `MeshPeer` status (`lastProbeAttempt`, `lastProbeTime`);
+  `dwxctl slo` / `mesh_connectivity` prefer probe-observed liveness over the
+  WireGuard handshake when it is recent. A peer that handshook but whose
+  application probe fails reports **Impaired**; disabling the prober reverts to
+  handshake-observed liveness on its own.
 - **Operator tooling.** `dwxctl` CLI and the read-only `dwx-mcp` Model Context
   Protocol server, so an AI agent can ask about the live mesh without any
   mutating capability.
@@ -83,8 +69,11 @@ that ships it.
   static image, and a release pipeline producing a multi-arch signed image, an
   SBOM, cosign keyless signatures, and GoReleaser CLI archives with a Homebrew
   cask.
-- **Ecosystem starters.** Artifact Hub metadata, a Terraform module, and a
-  Backstage catalog entry under `examples/`.
+- **Ecosystem starters.** Artifact Hub metadata, a Terraform module (with the
+  `helm`/`kubernetes` providers pinned below 3.0 for the `set { }` block form),
+  and a Backstage catalog entry under `examples/`. An `ecosystem` CI workflow
+  validates the GoReleaser config, the Terraform module (`fmt` + `validate`), and
+  the Artifact Hub / Backstage manifests so these artifacts can't silently rot.
 
 ### Security
 

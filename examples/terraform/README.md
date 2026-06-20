@@ -9,7 +9,7 @@ cluster credentials.
 
 - Creates the `datawerx-system` namespace (optional).
 - Installs the `datawerx-mesh` chart from
-  `oci://ghcr.io/datawerx/datawerx/charts` at a pinned version.
+  `oci://ghcr.io/datawerx/datawerx-mesh/charts` at a pinned version.
 - Passes the cluster ID and, optionally, the WireGuard private-key Secret and any
   extra Helm values through to the chart.
 
