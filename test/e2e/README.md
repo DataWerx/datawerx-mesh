@@ -23,8 +23,11 @@ manual/nightly), never in the default unit-test pipeline.
    mirrored `EndpointExport`) removes the `ServiceImport` in B.
 
 4. **`TestOverlapRemapConnectivity`** (overlap mode only) — both clusters share
-   the same CIDRs; B reaches A's Service via its **virtual** IP through the M3
-   NETMAP remap. This is the end-to-end gate for the bidirectional NAT.
+   the same CIDRs; B reaches A's backend **pod** via its **virtual** IP through
+   the M3 NETMAP remap. This is the end-to-end gate for the bidirectional,
+   stateless 1:1 NAT. It targets a pod IP (pure L3 remap, multi-node-correct),
+   not a Service ClusterIP — cross-cluster Service reach is covered by
+   `TestCrossClusterClusterSetIP`, whose data plane DNATs to pod endpoints.
 
 ## Run it
 

@@ -14,8 +14,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/DataWerx/datawerx-mesh/pkg/topology"
 )
@@ -28,14 +27,25 @@ const (
 	// (allocated from 172.16.0.0/12) that the clusters' underlay rides on.
 	ovlRemapPool      = "100.64.0.0/10"
 	ovlClusterAID     = "cluster-a"
-	ovlServiceCIDR    = "10.96.0.0/16" // SVC_A == SVC_B in OVERLAP mode
+	ovlPodCIDR        = "10.244.0.0/16" // POD_A == POD_B in OVERLAP mode
 	ovlConnectTimeout = 4 * time.Minute
 )
 
 // TestOverlapRemapConnectivity is the M3 gate: both clusters share the same
 // pod/service CIDRs (set up by `OVERLAP=1 hack/e2e/kind-up.sh`), so cluster B
-// reaches cluster A's Service only through the bidirectional NETMAP remap — by
-// the Service's *virtual* IP. A success here proves the NAT directions compose.
+// reaches cluster A's backend only through the bidirectional NETMAP remap — by
+// the pod's *virtual* IP. A success here proves the stateless 1:1 NAT directions
+// compose end to end across the overlapping mesh.
+//
+// It deliberately targets a pod IP, not a Service ClusterIP. Remap is a pure L3
+// address translation (stateless NETMAP, no conntrack), so pod-to-pod over the
+// virtual range is exactly what the feature provides and is correct on any
+// number of nodes. Reaching a Service cross-cluster is a separate concern proven
+// by TestCrossClusterClusterSetIP, whose ClusterSetIP data plane DNATs straight
+// to pod endpoints. Curling a bare ClusterIP *through* remap would instead lean
+// on the destination's kube-proxy to DNAT a non-local source, which kube-proxy
+// masquerades to the ingress node — a single-node-only path that breaks the
+// return route on a real multi-node cluster.
 //
 // Gated by E2E_OVERLAP=1 because it requires the overlapping cluster setup
 // (distinct-CIDR runs would route directly and not exercise remap).
@@ -60,26 +70,25 @@ func TestOverlapRemapConnectivity(t *testing.T) {
 	t.Cleanup(func() {
 		c := context.Background()
 		_ = a.deleteIfExists(c, ovlDeployment())
-		_ = a.deleteIfExists(c, ovlService())
 		_ = b.deleteIfExists(c, ovlJob(""))
 	})
 
-	// Backend + a normal ClusterIP Service in cluster A.
-	mustCreate(t, ctx, a, ovlDeployment(), ovlService())
+	// Backend pod in cluster A.
+	mustCreate(t, ctx, a, ovlDeployment())
 
-	// Wait for A to assign the Service a ClusterIP, then map it to its virtual IP.
-	clusterIP, err := awaitClusterIP(ctx, a)
+	// Wait for A's pod to get a real pod IP, then map it to its virtual IP.
+	podIP, err := awaitPodIP(ctx, a)
 	if err != nil {
-		t.Fatalf("service never got a ClusterIP: %v", err)
+		t.Fatalf("backend pod never got an IP: %v", err)
 	}
 
-	virtualIP, err := remapHostIP(ovlRemapPool, ovlClusterAID, ovlServiceCIDR, clusterIP)
+	virtualIP, err := remapHostIP(ovlRemapPool, ovlClusterAID, ovlPodCIDR, podIP)
 	if err != nil {
 		t.Fatalf("computing virtual IP: %v", err)
 	}
-	t.Logf("cluster A service ClusterIP %s -> virtual %s (reachable from B)", clusterIP, virtualIP)
+	t.Logf("cluster A pod IP %s -> virtual %s (reachable from B)", podIP, virtualIP)
 
-	// A Job in B that curls the VIRTUAL IP. Success proves the remap works
+	// A Job in B that curls the virtual pod IP. Success proves the remap works
 	// end-to-end across the overlapping mesh.
 	job := ovlJob(virtualIP)
 	mustCreate(t, ctx, b, job)
@@ -88,26 +97,29 @@ func TestOverlapRemapConnectivity(t *testing.T) {
 	}); err != nil {
 		dumpMeshDiagnostics(ctx, t, a, b)
 		dumpDataPathDiagnostics(ctx, t, b, job.Name, ovlNamespace, a, b)
-		t.Fatalf("overlap remap connectivity failed (B could not reach A's service via its virtual IP): %v", err)
+		t.Fatalf("overlap remap connectivity failed (B could not reach A's pod via its virtual IP): %v", err)
 	}
 }
 
-// awaitClusterIP waits until cluster A's overlap Service is assigned a ClusterIP
-// and returns it.
-func awaitClusterIP(ctx context.Context, a *cluster) (string, error) {
-	var clusterIP string
-	err := eventually(ctx, time.Minute, func(ctx context.Context) (bool, error) {
-		var svc corev1.Service
-		if err := a.c.Get(ctx, types.NamespacedName{Namespace: ovlNamespace, Name: ovlName}, &svc); err != nil {
+// awaitPodIP waits until cluster A's overlap backend pod is Running with a pod IP
+// assigned and returns it.
+func awaitPodIP(ctx context.Context, a *cluster) (string, error) {
+	var podIP string
+	err := eventually(ctx, 2*time.Minute, func(ctx context.Context) (bool, error) {
+		var pods corev1.PodList
+		if err := a.c.List(ctx, &pods, client.InNamespace(ovlNamespace), client.MatchingLabels(ovlLabels())); err != nil {
 			return false, err
 		}
-		if svc.Spec.ClusterIP == "" || svc.Spec.ClusterIP == corev1.ClusterIPNone {
-			return false, nil
+		for i := range pods.Items {
+			p := &pods.Items[i]
+			if p.Status.Phase == corev1.PodRunning && p.Status.PodIP != "" {
+				podIP = p.Status.PodIP
+				return true, nil
+			}
 		}
-		clusterIP = svc.Spec.ClusterIP
-		return true, nil
+		return false, nil
 	})
-	return clusterIP, err
+	return podIP, err
 }
 
 // remapHostIP maps a real IP within realCIDR to the corresponding address in the
@@ -161,16 +173,6 @@ func ovlDeployment() *appsv1.Deployment {
 					}},
 				},
 			},
-		},
-	}
-}
-
-func ovlService() *corev1.Service {
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{Name: ovlName, Namespace: ovlNamespace},
-		Spec: corev1.ServiceSpec{
-			Selector: ovlLabels(),
-			Ports:    []corev1.ServicePort{{Port: 8080, TargetPort: intstr.FromInt(8080), Protocol: corev1.ProtocolTCP}},
 		},
 	}
 }
