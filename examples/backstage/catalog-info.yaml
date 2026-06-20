@@ -12,7 +12,7 @@ metadata:
     per-node WireGuard agent converges the kernel data plane toward declarative
     MeshPeer resources and links disparate clusters over encrypted tunnels.
   annotations:
-    github.com/project-slug: datawerx/datawerx
+    github.com/project-slug: datawerx/datawerx-mesh
     backstage.io/techdocs-ref: dir:../../docs
   tags:
     - kubernetes

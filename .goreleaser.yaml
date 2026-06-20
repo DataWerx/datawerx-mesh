@@ -82,7 +82,7 @@ homebrew_casks:
 release:
   github:
     owner: datawerx
-    name: datawerx
+    name: datawerx-mesh
   # The image/chart release job also attaches assets to this tag's Release; do
   # not let goreleaser wipe them.
   mode: append
