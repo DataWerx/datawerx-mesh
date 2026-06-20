@@ -1,4 +1,4 @@
-//go:build dataplane
+//go:build dataplane && linux
 
 // Data-plane integration tests for the mesh firewall manager. They program the
 // real iptables filter table, so they need root with the iptables binary, and run
