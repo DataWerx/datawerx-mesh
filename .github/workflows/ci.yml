@@ -93,3 +93,37 @@ jobs:
         run: |
           bash hack/e2e/patch-coredns_test.sh
           bash hack/e2e/join_test.sh
+
+  windows-cli:
+    name: windows CLI build & unit tests
+    runs-on: windows-latest
+    steps:
+      # Keep line endings LF on checkout so raw-string golden comparisons in the
+      # pure-logic tests don't trip over CRLF on the Windows runner.
+      - name: Disable autocrlf
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+          check-latest: true
+
+      # The agent (pkg/wg, pkg/routed, the meshfw/nat iptables appliers) is
+      # Linux-only by design — netlink and go-iptables don't build on Windows —
+      # so we never build ./... here. The operator CLIs are the cross-platform
+      # surface; this job guards them against a regression like an accidental
+      # Linux-only import (e.g. the go-iptables-via-pkg/meshfw issue that shipped
+      # a broken Windows build in the first release cut).
+      - name: Build the operator CLIs (windows)
+        run: go build ./cmd/dwxctl ./cmd/dwx-mcp
+
+      - name: Smoke-run dwxctl
+        run: |
+          go build -o dwxctl.exe ./cmd/dwxctl
+          ./dwxctl.exe version
+
+      - name: Unit tests (cross-platform packages)
+        run: go test ./pkg/topology/... ./pkg/verify/... ./pkg/bootstrap/... ./pkg/impact/... ./pkg/meshgraph/... ./pkg/reach/... ./pkg/slo/... ./pkg/meshfw/... ./pkg/contract/...

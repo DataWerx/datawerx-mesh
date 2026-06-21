@@ -33,6 +33,25 @@ sudo install dwxctl dwx-mcp /usr/local/bin/
 dwxctl version
 ```
 
+## Windows (PowerShell)
+
+There is no Homebrew on Windows — download the `windows` zip from the
+[latest release](https://github.com/DataWerx/datawerx-mesh/releases/latest),
+extract it, and put the `.exe`s on your `PATH`:
+
+```powershell
+# pick your arch: amd64 or arm64
+Expand-Archive datawerx_<version>_windows_amd64.zip -DestinationPath $Env:USERPROFILE\dwx
+# add to PATH for this session; persist via System → Environment Variables
+$Env:PATH += ";$Env:USERPROFILE\dwx"
+dwxctl.exe version
+```
+
+`dwxctl` and `dwx-mcp` read your kubeconfig the standard way
+(`%USERPROFILE%\.kube\config` or the `KUBECONFIG` variable), so they work against
+any cluster your `kubectl` already reaches. The cosign verification below works on
+Windows too (use `Get-FileHash` instead of `sha256sum` for the checksum check).
+
 ## Verify the download (cosign)
 
 Every release is signed keylessly with [cosign](https://docs.sigstore.dev/).
