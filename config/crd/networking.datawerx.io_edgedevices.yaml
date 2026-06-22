@@ -1,0 +1,102 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: edgedevices.networking.datawerx.io
+spec:
+  group: networking.datawerx.io
+  names:
+    kind: EdgeDevice
+    listKind: EdgeDeviceList
+    plural: edgedevices
+    singular: edgedevice
+    shortNames:
+      - ed
+  scope: Cluster
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Device
+          type: string
+          jsonPath: .spec.deviceID
+        - name: Address
+          type: string
+          jsonPath: .status.address
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: EdgeDevice is the Schema for the edgedevices API.
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              required:
+                - deviceID
+                - publicKey
+              properties:
+                deviceID:
+                  type: string
+                  minLength: 1
+                  description: Stable, human-facing identity of the device.
+                publicKey:
+                  type: string
+                  minLength: 1
+                  description: Base64-encoded Curve25519 WireGuard public key of the device.
+                address:
+                  type: string
+                  description: Optional pinned tunnel address; empty means deterministic allocation from the edge CIDR.
+                allowedServices:
+                  type: array
+                  x-kubernetes-list-type: set
+                  items:
+                    type: string
+                  description: Optional clusterset service-name globs scoping the device's reachable services.
+                allowedCIDRs:
+                  type: array
+                  x-kubernetes-list-type: set
+                  items:
+                    type: string
+                  description: Optional extra raw destination ranges; screened the same way mesh CIDRs are.
+                identityPreserving:
+                  type: boolean
+                  description: Skip the gateway masquerade so pods see the device's real tunnel IP (requires the premium return-route component).
+                expiresAt:
+                  type: string
+                  format: date-time
+                  description: Optional RFC3339 instant past which the reconciler tears the device peer down.
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - Pending
+                    - Connected
+                    - Error
+                address:
+                  type: string
+                  description: The tunnel address assigned to the device (/32 or /128).
+                lastHandshakeTime:
+                  type: integer
+                  format: int64
+                  description: Unix epoch seconds of the most recent successful handshake (0 if none).
+                message:
+                  type: string
+                observedGeneration:
+                  type: integer
+                  format: int64
