@@ -1,0 +1,26 @@
+---
+# An EdgeDevice is a single non-Kubernetes device (an edge or IoT device, VM, 
+# dev/ops laptop) that reaches mesh services by name over a WireGuard tunnel. The
+# it device dials outbound to the edge-ingress terminator on a gateway node.
+#
+# The EdgeDevice CRD is the tier-agnostic contract and ships with the open core,
+# but it is programmed by the premium edge connector which is the managed `dwx-edge0`
+# terminator, EdgeDeviceReconciler, injected via RegisterPremium. The free,
+# no-cost edge-reach path is BYO overlay + the gateway role — see docs/byo-overlay.md.
+#
+# The device's private key is generated ON THE DEVICE and never appears here;
+# only its shareable public key does.
+apiVersion: networking.datawerx.io/v1alpha1
+kind: EdgeDevice
+metadata:
+  name: press-line-7
+spec:
+  deviceID: press-line-7
+  publicKey: "REPLACE_WITH_DEVICE_WG_PUBLIC_KEY="
+  # address: ""                 # optional /32 pin; empty => deterministic allocation from DataWerx_EDGE_CIDR
+  allowedServices:
+    - payments.prod
+    - "telemetry.*"
+  # allowedCIDRs: []            # optional extra raw destinations (screened against dangerous ranges)
+  identityPreserving: false     # true needs the premium nonat return-route component
+  # expiresAt: "2026-12-31T00:00:00Z"   # optional TTL; the reconciler tears the peer down past it

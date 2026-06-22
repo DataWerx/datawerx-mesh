@@ -10,6 +10,7 @@
 //   - slo      — connectivity golden signals: expected reachability vs. observed tunnel liveness.
 //   - policy   — dry-run the impact of a proposed MeshNetworkPolicy before apply.
 //   - join     — author a MeshPeer for a remote cluster from a bootstrap bundle.
+//   - edge     — enroll/render/list edge devices (the EdgeDevice contract, design 0013).
 //
 // The read-only commands mutate nothing and are safe to run anytime; `verify`
 // exits non-zero if any check fails, so it doubles as a smoke test in the
@@ -50,6 +51,8 @@ func main() {
 		os.Exit(runPolicy(os.Args[2:]))
 	case "join":
 		os.Exit(runJoin(os.Args[2:]))
+	case "edge":
+		os.Exit(runEdge(os.Args[2:]))
 	case "version", "--version", "-v":
 		fmt.Printf("dwxctl %s\n", logging.Version)
 		os.Exit(0)
@@ -75,6 +78,7 @@ Usage:
   dwxctl slo [flags]         Connectivity golden signals (expected vs. observed)
   dwxctl policy --dry-run    Impact analysis of a proposed MeshNetworkPolicy
   dwxctl join [sub] [flags]  Bootstrap a peering: export/import a join bundle
+  dwxctl edge [sub] [flags]  Edge devices: enroll/profile/list (design 0013)
   dwxctl version             Print the dwxctl version
 
 Run "dwxctl <command> -h" for flags.

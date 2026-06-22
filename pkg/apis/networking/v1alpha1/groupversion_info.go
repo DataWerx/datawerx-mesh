@@ -36,5 +36,6 @@ func init() {
 		&MeshPeer{}, &MeshPeerList{},
 		&EndpointExport{}, &EndpointExportList{},
 		&MeshNetworkPolicy{}, &MeshNetworkPolicyList{},
+		&EdgeDevice{}, &EdgeDeviceList{},
 	)
 }
