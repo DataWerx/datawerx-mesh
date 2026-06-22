@@ -12,7 +12,35 @@ called out as such.
 
 ## [Unreleased]
 
-Nothing yet — changes land here after v0.1.0.
+Nothing yet — changes land here after v0.2.0.
+
+## [0.2.0] — 2026-06-22
+
+### Added
+
+- **Edge device connector — open-core contract (design 0013).** A single
+  non-Kubernetes device (an IoT box, a VM, a laptop) can reach mesh services by
+  name over a WireGuard tunnel it dials outbound. The open core ships the
+  tier-agnostic half:
+  - The cluster-scoped `EdgeDevice` CRD (`networking.datawerx.io/v1alpha1`,
+    short name `ed`) with hand-written deepcopy and the CRD YAML in `config/crd`
+    and the Helm chart — the integration point both tiers program, exactly like
+    `MeshPeer`.
+  - The pure `pkg/edge` planner: deterministic broker-less device-IP allocation
+    (`AllocateDeviceIPs`, mirroring `dns.AllocateClusterSetIPs`), the
+    terminator-side peer plan (`PlanDevicePeer`, a device's own `/32` only), the
+    device-side profile + `wg-quick` rendering (`BuildDeviceProfile`, reusing
+    `gateway.AccessProfile`), the `dwxedge.v1` enrollment-token codec, and the
+    fail-closed `ValidateEdgeCIDR` startup screen. Exhaustively table-tested and
+    fuzzed.
+  - `dwxctl edge` (`enroll`/`profile`/`list`) — authors the `EdgeDevice`
+    contract via the pure planner and renders the device artifact;
+    `--generate` keeps the private key on the device.
+
+  The *managed* terminator, reconciler, and enrollment are premium (injected via
+  `pkg/agent.Options.RegisterPremium`); the capability of edge reach also remains
+  free via the BYO-overlay + gateway role. The reconcile loop and data plane
+  never branch on tier.
 
 ## [0.1.0] — 2026-06-20
 
@@ -81,5 +109,6 @@ that ships it.
   Scorecard, Dependabot, Go native fuzzing of the parsers, and SHA-pinned GitHub
   Actions. Reporting policy and an operator hardening checklist in `SECURITY.md`.
 
-[Unreleased]: https://github.com/DataWerx/datawerx-mesh/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/DataWerx/datawerx-mesh/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/DataWerx/datawerx-mesh/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DataWerx/datawerx-mesh/releases/tag/v0.1.0
