@@ -19,7 +19,7 @@ Use our batteries-included built-in overlay
 [![Go 1.26](https://img.shields.io/badge/Go-1.26-00ADD8.svg)](https://go.dev)
 
 
-<img src="docs/images/dw-small.png" height=100px/>
+<img src="docs/images/logo.svg" height=100px/>
 
 
 [Quickstart](#quickstart-5-minutes) · [How it works](#how-it-works) · [Why it's different](#why-its-different) · [Ask an AI](#ask-an-ai-about-your-mesh) · [Docs](docs/README.md)
