@@ -19,6 +19,7 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -333,6 +334,31 @@ func (c *EnterpriseControlPlaneClient) FetchTopologyWithRevision(ctx context.Con
 	return envelope.Peers, envelope.Revision, nil
 }
 
+// PushEvidence sends this cluster's grounded evidence report to the managed 
+// control plane for the premium "DataWerx Signal" fleet view. It is additive
+// to the topology contract, not on the free ControlPlaneClient interface, so the
+// free tier never calls it. It reuses the hardened transport capped backoff on
+// 429/5xx, one token refresh on 401/403. The control plane upserts the latest
+// report per cluster, so a transient failure is harmless: the next push replaces
+// it. The caller (the evidence reporter Runnable) logs and retries on the next
+// interval rather than failing the agent.
+func (c *EnterpriseControlPlaneClient) PushEvidence(ctx context.Context, payload []byte) error {
+	if c.token == "" {
+		if err := c.Authenticate(ctx); err != nil {
+			return err
+		}
+	}
+	resp, err := c.authorizedPost(ctx, "/api/v1/evidence", payload)
+	if err != nil {
+		return fmt.Errorf("enterprise control plane: evidence push: %w", err)
+	}
+	defer drainAndClose(resp)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("enterprise control plane: evidence push returned HTTP %d", resp.StatusCode)
+	}
+	return nil
+}
+
 // RevisionedControlPlane is the optional interface a control-plane client may
 // satisfy to expose the topology revision. The syncer type-asserts for it to
 // enable change-detection; clients that don't implement it simply always sync.
@@ -355,6 +381,20 @@ var _ RevisionedControlPlane = (*EnterpriseControlPlaneClient)(nil)
 // owns draining/closing it. A nil-error non-2xx response is returned verbatim so
 // the caller can apply endpoint-specific status semantics.
 func (c *EnterpriseControlPlaneClient) authorizedGet(ctx context.Context, path string) (*http.Response, error) {
+	return c.authorizedDo(ctx, http.MethodGet, path, nil)
+}
+
+// authorizedPost performs a POST of the JSON payload with the same two layers of
+// resilience as authorizedGet. The payload is re-read from a fresh reader on each
+// attempt, so a backoff retry or a token-refresh retry re-sends the body intact.
+func (c *EnterpriseControlPlaneClient) authorizedPost(ctx context.Context, path string, payload []byte) (*http.Response, error) {
+	return c.authorizedDo(ctx, http.MethodPost, path, func() io.Reader { return bytes.NewReader(payload) })
+}
+
+// authorizedDo runs the retry/refresh loop for an arbitrary method. newBody, when
+// non-nil, must return a fresh body reader on every call (each attempt consumes
+// one). It is the shared engine behind authorizedGet/authorizedPost.
+func (c *EnterpriseControlPlaneClient) authorizedDo(ctx context.Context, method, path string, newBody func() io.Reader) (*http.Response, error) {
 	url := c.Endpoint + path
 	var refreshed bool
 	var lastErr error
@@ -366,7 +406,7 @@ func (c *EnterpriseControlPlaneClient) authorizedGet(ctx context.Context, path s
 			}
 		}
 
-		resp, action, err := c.getAttempt(ctx, url, path, &refreshed)
+		resp, action, err := c.doAttempt(ctx, method, url, path, newBody, &refreshed)
 		switch action {
 		case actionReturn:
 			if err != nil {
@@ -395,15 +435,23 @@ const (
 	actionRetry                         // transient failure: retry with backoff
 )
 
-// getAttempt performs one GET and classifies the result. It returns a non-nil
+// doAttempt performs one request and classifies the result. It returns a non-nil
 // resp only on the terminal success path. A non-nil err with actionReturn is
-// fatal; with actionRetry it is the (retryable) lastErr.
-func (c *EnterpriseControlPlaneClient) getAttempt(ctx context.Context, url, path string, refreshed *bool) (*http.Response, responseAction, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+// fatal; with actionRetry it is the (retryable) lastErr. newBody, when non-nil,
+// supplies a fresh body reader for this attempt.
+func (c *EnterpriseControlPlaneClient) doAttempt(ctx context.Context, method, url, path string, newBody func() io.Reader, refreshed *bool) (*http.Response, responseAction, error) {
+	var body io.Reader
+	if newBody != nil {
+		body = newBody()
+	}
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, actionReturn, fmt.Errorf("building request for %s: %w", path, err)
 	}
 	c.decorate(req)
+	if newBody != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {

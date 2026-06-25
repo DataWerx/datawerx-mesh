@@ -52,6 +52,26 @@ func (s Status) MarshalText() ([]byte, error) {
 	return []byte(s.String()), nil
 }
 
+// UnmarshalText parses the symbolic name back into a Status, so a snapshot
+// emitted by `dwxctl snapshot` / `dwx-mcp` round-trips into verify.Snapshot. The
+// contract is meant to be re-ingested by a higher layer (e.g. dwx-signal), so
+// the text form MarshalText writes must read back symmetrically. An unknown name
+// is an error rather than a silent StatusPass, so corrupt input never masquerades
+// as healthy.
+func (s *Status) UnmarshalText(text []byte) error {
+	switch string(text) {
+	case "PASS":
+		*s = StatusPass
+	case "WARN":
+		*s = StatusWarn
+	case "FAIL":
+		*s = StatusFail
+	default:
+		return fmt.Errorf("unknown verify.Status %q", text)
+	}
+	return nil
+}
+
 // Check is one named result.
 type Check struct {
 	Name   string `json:"name"`

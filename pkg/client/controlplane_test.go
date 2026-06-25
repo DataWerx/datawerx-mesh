@@ -3,6 +3,7 @@ package client_test
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -227,5 +228,65 @@ func TestEnterpriseClient_FetchTopology_ServerError(t *testing.T) {
 		dwxclient.WithTokenLoader(func() string { return "tok" }))
 	if _, err := c.FetchTopology(context.Background()); err == nil {
 		t.Fatal("expected error on 500 topology response")
+	}
+}
+
+func TestEnterpriseClient_PushEvidence(t *testing.T) {
+	var (
+		gotMethod, gotPath, gotAuth, gotCType string
+		gotBody                               []byte
+	)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/v1/auth/whoami":
+			w.WriteHeader(http.StatusOK)
+		case "/api/v1/evidence":
+			gotMethod = r.Method
+			gotPath = r.URL.Path
+			gotAuth = r.Header.Get("Authorization")
+			gotCType = r.Header.Get("Content-Type")
+			gotBody, _ = io.ReadAll(r.Body)
+			_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer srv.Close()
+
+	c := dwxclient.NewEnterpriseControlPlaneClient(srv.URL,
+		dwxclient.WithTokenLoader(func() string { return "tok" }))
+
+	payload := []byte(`{"generatedAt":1750000000,"diagnosis":[]}`)
+	if err := c.PushEvidence(context.Background(), payload); err != nil {
+		t.Fatalf("PushEvidence: %v", err)
+	}
+	if gotMethod != http.MethodPost || gotPath != "/api/v1/evidence" {
+		t.Errorf("request = %s %s, want POST /api/v1/evidence", gotMethod, gotPath)
+	}
+	if gotAuth != "Bearer tok" {
+		t.Errorf("auth header = %q", gotAuth)
+	}
+	if gotCType != "application/json" {
+		t.Errorf("content-type = %q, want application/json", gotCType)
+	}
+	if string(gotBody) != string(payload) {
+		t.Errorf("body = %s, want %s", gotBody, payload)
+	}
+}
+
+func TestEnterpriseClient_PushEvidence_Error(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/v1/auth/whoami" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest) // non-retryable -> surfaced immediately
+	}))
+	defer srv.Close()
+
+	c := dwxclient.NewEnterpriseControlPlaneClient(srv.URL,
+		dwxclient.WithTokenLoader(func() string { return "tok" }))
+	if err := c.PushEvidence(context.Background(), []byte(`{}`)); err == nil {
+		t.Fatal("expected an error on a non-200 evidence response")
 	}
 }

@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
+	"github.com/DataWerx/datawerx-mesh/internal/meshstate"
 	mcsv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/multicluster/v1alpha1"
 	networkingv1alpha1 "github.com/DataWerx/datawerx-mesh/pkg/apis/networking/v1alpha1"
 	dwxclient "github.com/DataWerx/datawerx-mesh/pkg/client"
@@ -43,6 +44,7 @@ import (
 	"github.com/DataWerx/datawerx-mesh/pkg/dataplane/ebpf"
 	dwxdns "github.com/DataWerx/datawerx-mesh/pkg/dns"
 	"github.com/DataWerx/datawerx-mesh/pkg/dnsserver"
+	"github.com/DataWerx/datawerx-mesh/pkg/evidence"
 	"github.com/DataWerx/datawerx-mesh/pkg/gateway"
 	"github.com/DataWerx/datawerx-mesh/pkg/logging"
 	"github.com/DataWerx/datawerx-mesh/pkg/meshfw"
@@ -53,6 +55,7 @@ import (
 	"github.com/DataWerx/datawerx-mesh/pkg/routed"
 	"github.com/DataWerx/datawerx-mesh/pkg/syncer"
 	"github.com/DataWerx/datawerx-mesh/pkg/topology"
+	"github.com/DataWerx/datawerx-mesh/pkg/verify"
 	"github.com/DataWerx/datawerx-mesh/pkg/wg"
 )
 
@@ -299,6 +302,9 @@ func Run(opts Options) error {
 		return err
 	}
 	if err := registerProbing(mgr, cfg); err != nil {
+		return err
+	}
+	if err := registerEvidenceReporter(mgr, cpClient, topoSyncer != nil); err != nil {
 		return err
 	}
 
@@ -603,6 +609,45 @@ func registerServers(mgr ctrl.Manager, topoSyncer *syncer.Syncer) error {
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		return fmt.Errorf("adding readyz check: %w", err)
 	}
+	return nil
+}
+
+// registerEvidenceReporter wires the premium-tier evidence reporter: a Runnable
+// that periodically pushes this cluster's grounded evidence to the managed control
+// plane for the "DataWerx Signal" fleet view. It is gated on the premium tier,
+// which is the same condition that produced the topology syncer, and on
+// the control-plane client actually supporting evidence push.  The open-core,
+// self-hosted tier wires nothing and the reconcile loop is untouched. Snapshot
+// gathering uses a dedicated read-only client (not the manager cache) exactly as
+// the other read surfaces (dwxctl/dwx-mcp) do.
+func registerEvidenceReporter(mgr ctrl.Manager, cpClient dwxclient.ControlPlaneClient, premium bool) error {
+	if !premium {
+		return nil
+	}
+	sink, ok := cpClient.(evidence.Sink)
+	if !ok {
+		// The premium control plane doesn't accept evidence (older endpoint); skip
+		// rather than fail — evidence sync is additive and non-essential.
+		setupLog.Info("evidence reporter not wired: control plane does not support evidence push")
+		return nil
+	}
+	msClient, err := meshstate.NewClient("", "")
+	if err != nil {
+		return fmt.Errorf("evidence reporter: building kubernetes client: %w", err)
+	}
+	ns, ds := meshstate.DefaultNamespace, meshstate.DefaultDaemonSet
+	reporter := &evidence.Reporter{
+		Sink:     sink,
+		Interval: resolveSyncInterval(),
+		Log:      ctrl.Log.WithName("evidence-reporter"),
+		Snapshot: func(ctx context.Context) (verify.Snapshot, error) {
+			return meshstate.Snapshot(ctx, msClient, ns, ds)
+		},
+	}
+	if err := mgr.Add(reporter); err != nil {
+		return fmt.Errorf("registering evidence reporter: %w", err)
+	}
+	setupLog.Info("evidence reporter wired (premium tier)", "interval", reporter.Interval)
 	return nil
 }
 
