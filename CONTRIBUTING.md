@@ -17,7 +17,7 @@ conventions, and how to run each test layer. By participating you agree to the
 ```sh
 go build ./...                                # compile
 CGO_ENABLED=0 go build -o dwx-manager ./cmd/manager
-CGO_ENABLED=0 go build -o dwxctl ./cmd/dwxctl
+CGO_ENABLED=0 go build -o dwx ./cmd/dwx
 
 go test ./...                                 # unit tests (hermetic, root-free)
 go test -race -count=1 ./...                  # what CI runs

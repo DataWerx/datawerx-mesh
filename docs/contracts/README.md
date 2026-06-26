@@ -6,8 +6,8 @@ Backstage plugin, a CI gate, a hosted plane — can validate the JSON it receive
 
 | Contract | Schema | Produced by | Design |
 |----------|--------|-------------|--------|
-| Mesh snapshot | [`mesh-snapshot.schema.json`](mesh-snapshot.schema.json) | `dwxctl snapshot`, `dwx-mcp` `mesh_snapshot` | [0005](../design/0005-mesh-snapshot.md) |
-| Mesh dependency graph | [`mesh-graph.schema.json`](mesh-graph.schema.json) | `dwxctl graph`, `dwx-mcp` `mesh_graph` | [0009](../design/0009-mesh-dependency-graph.md) |
+| Mesh snapshot | [`mesh-snapshot.schema.json`](mesh-snapshot.schema.json) | `dwx mesh snapshot`, `dwx mcp` `mesh_snapshot` | [0005](../design/0005-mesh-snapshot.md) |
+| Mesh dependency graph | [`mesh-graph.schema.json`](mesh-graph.schema.json) | `dwx mesh graph`, `dwx mcp` `mesh_graph` | [0009](../design/0009-mesh-dependency-graph.md) |
 
 Both schemas declare JSON Schema draft 2020-12.
 
@@ -15,21 +15,21 @@ Both schemas declare JSON Schema draft 2020-12.
 
 The schemas are **generated from the Go structs that produce the JSON**, by the
 reflective generator in `pkg/contract`. The committed copies here are kept
-identical to the generator's output by a golden test (`cmd/dwxctl`), so a change
+identical to the generator's output by a golden test (`internal/cli/mesh`), so a change
 to the contract types that isn't reflected in these files fails CI. There is no
 separate hand-maintained schema to forget to update.
 
 Emit the live schema from the CLI (no cluster access needed):
 
 ```sh
-dwxctl snapshot --schema    # the mesh snapshot schema
-dwxctl graph --schema       # the dependency graph schema
+dwx mesh snapshot --schema    # the mesh snapshot schema
+dwx mesh graph --schema       # the dependency graph schema
 ```
 
 Regenerate the committed copies after a contract change:
 
 ```sh
-go test ./cmd/dwxctl -update-golden
+go test ./internal/cli/mesh -update-golden
 ```
 
 ## Versioning

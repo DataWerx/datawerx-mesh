@@ -106,7 +106,7 @@ func TestPeerObject_DeterministicNameAndLabel(t *testing.T) {
 	if obj.Spec.ClusterID != "Cluster.A" || obj.Spec.PublicKey != b.PublicKey {
 		t.Errorf("peer spec not projected from bundle: %+v", obj.Spec)
 	}
-	// TypeMeta is set so `dwxctl join import --dry-run` emits a self-describing
+	// TypeMeta is set so `dwx mesh join import --dry-run` emits a self-describing
 	// manifest that pipes into `kubectl apply -f -`.
 	if obj.Kind != "MeshPeer" || obj.APIVersion != networkingv1alpha1.GroupVersion.String() {
 		t.Errorf("peer object missing TypeMeta: apiVersion=%q kind=%q", obj.APIVersion, obj.Kind)

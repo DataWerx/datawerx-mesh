@@ -9,9 +9,9 @@ import (
 
 // EdgeDeviceObject builds the cluster-scoped EdgeDevice object to apply for a
 // device, naming it deterministically from the device ID and tagging it as
-// authored by `dwxctl edge`. Re-enrolling the same device is therefore an
+// authored by `dwx edge`. Re-enrolling the same device is therefore an
 // idempotent upsert. The TypeMeta is set so the object rendered by
-// `dwxctl edge enroll --dry-run` is a valid, self-describing manifest a user can
+// `dwx edge enroll --dry-run` is a valid, self-describing manifest a user can
 // pipe straight into `kubectl apply -f -`. It mirrors bootstrap.PeerObject.
 func EdgeDeviceObject(spec networkingv1alpha1.EdgeDeviceSpec) *networkingv1alpha1.EdgeDevice {
 	return &networkingv1alpha1.EdgeDevice{

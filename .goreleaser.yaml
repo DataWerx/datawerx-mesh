@@ -1,8 +1,11 @@
-# GoReleaser builds and publishes the operator-facing CLIs — dwxctl and the
-# dwx-mcp MCP server — as cross-platform, checksummed, SBOM'd, and cosign-signed
-# archives, plus a Homebrew formula. The agent itself ships as the signed
-# container image and Helm chart cut by .github/workflows/release.yml; this is
-# the half an operator installs on a laptop.
+# GoReleaser builds and publishes the unified `dwx` CLI — plus the deprecated
+# `dwxctl` and `dwx-mcp` aliases kept for backward compatibility — as
+# cross-platform, checksummed, SBOM'd, and cosign-signed archives, plus a
+# Homebrew cask. `dwx` is the single entry point an operator should use (design
+# 0016); `dwx mcp` replaces the standalone `dwx-mcp`, `dwx mesh` replaces
+# `dwxctl`. The agent itself ships as the signed container image and Helm chart
+# cut by .github/workflows/release.yml; this is the half an operator installs on
+# a laptop.
 #
 # Validate locally with `goreleaser check`; the release runs in CI on a tag.
 version: 2
@@ -10,6 +13,19 @@ version: 2
 project_name: datawerx
 
 builds:
+  - id: dwx
+    main: ./cmd/dwx
+    binary: dwx
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w
+      - -X github.com/DataWerx/datawerx-mesh/pkg/logging.Version={{ .Version }}
+
+  # Deprecated alias: `dwx mesh`. Shipped so existing scripts and the Homebrew
+  # cask keep working; prints a one-line deprecation note to stderr.
   - id: dwxctl
     main: ./cmd/dwxctl
     binary: dwxctl
@@ -21,6 +37,8 @@ builds:
       - -s -w
       - -X github.com/DataWerx/datawerx-mesh/pkg/logging.Version={{ .Version }}
 
+  # Deprecated alias: `dwx mcp`. Shipped so existing MCP client configs that
+  # launch `dwx-mcp` keep working.
   - id: dwx-mcp
     main: ./cmd/dwx-mcp
     binary: dwx-mcp
@@ -34,7 +52,7 @@ builds:
 
 archives:
   - id: cli
-    ids: [dwxctl, dwx-mcp]
+    ids: [dwx, dwxctl, dwx-mcp]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
@@ -64,20 +82,25 @@ signs:
     output: true
 
 homebrew_casks:
-  - name: dwxctl
+  # Cask renamed dwxctl -> dwx with the unified CLI (design 0016). The stale
+  # Casks/dwxctl.rb in the tap should be removed (or made a thin redirect) so
+  # `brew install datawerx/tap/dwxctl` doesn't linger; new installs use
+  # `brew install datawerx/tap/dwx`.
+  - name: dwx
     ids: [cli]
     repository:
       owner: datawerx
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     homepage: "https://github.com/DataWerx/datawerx-mesh"
-    description: "DataWerx Mesh operator CLI (dwxctl) and read-only MCP server (dwx-mcp)"
+    description: "DataWerx unified CLI (dwx), with the deprecated dwxctl and dwx-mcp aliases"
     license: "Apache-2.0"
     # Skip the tap commit on a snapshot/dirty build so `goreleaser --snapshot`
     # stays local-only.
     skip_upload: auto
-    # The archive carries both CLIs; install them together.
-    binaries: [dwxctl, dwx-mcp]
+    # The archive carries the unified CLI plus the back-compat aliases; install
+    # them together so existing `dwxctl`/`dwx-mcp` invocations keep working.
+    binaries: [dwx, dwxctl, dwx-mcp]
 
 release:
   github:
@@ -90,8 +113,9 @@ release:
     ## Install
 
     See [docs/install.md](https://github.com/DataWerx/datawerx-mesh/blob/main/docs/install.md)
-    for Homebrew, direct download, cosign verification, and the `dwx-mcp` MCP
-    server setup.
+    for Homebrew, direct download, cosign verification, and the `dwx mcp` MCP
+    server setup. The `dwxctl` and `dwx-mcp` binaries are deprecated aliases for
+    `dwx mesh` and `dwx mcp`.
 
 changelog:
   use: github

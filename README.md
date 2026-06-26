@@ -58,7 +58,7 @@ DataWerx solves the **whole** path: connectivity, discovery, a stable VIP, namin
 | 🔐 **Encrypted by default — or bring your own** | Built-in per-node WireGuard, *or* ride an overlay you already run (Tailscale, NetBird, Cilium, plain WireGuard, cloud VPN). |
 | 🧩 **CNI-agnostic & broker-less** | Works with any CNI. No central coordinator, no database, no single point of failure. |
 | 🛡️ **Cross-cluster network policy** | `MeshNetworkPolicy` extends segmentation across the mesh. |
-| 📈 **Observable & operable** | Prometheus metrics, a Grafana starter dashboard, a Helm chart, and `dwxctl verify` health checks. |
+| 📈 **Observable & operable** | Prometheus metrics, a Grafana starter dashboard, a Helm chart, and `dwx mesh verify` health checks. |
 | 🤖 **AI-ready / agent-queryable** | A **read-only MCP server** plus versioned JSON state contracts (snapshot + dependency graph) let Claude — or any agent — answer *"is the mesh healthy, and why not?"* from live state. [→ Ask an AI](#ask-an-ai-about-your-mesh) |
 
 ## How it works
@@ -113,7 +113,7 @@ Point Claude (Desktop or Code) at your cluster — no API key, no SaaS:
 ```json
 {
   "mcpServers": {
-    "datawerx-mesh": { "command": "dwx-mcp", "args": ["--context", "my-cluster"] }
+    "datawerx-mesh": { "command": "dwx mcp", "args": ["--context", "my-cluster"] }
   }
 }
 ```
@@ -124,14 +124,14 @@ Then just ask:
 > *"What does this cluster import, and from which clusters?"*
 > *"Are any tunnels stale or any CIDRs overlapping?"*
 
-Every answer is **grounded** — `dwxctl diagnose` and the `mesh_diagnose` tool cite
+Every answer is **grounded** — `dwx mesh diagnose` and the `mesh_diagnose` tool cite
 the exact signal behind each finding (a peer phase, a handshake age, a CIDR
 overlap), never a guess. And it's **free to read, governed to act**: the OSS
 exposes *zero* mutating tools by construction; the hosted "AI SRE" that proposes
 and opens a fix is the additive paid layer.
 
-Prefer no AI? The same contracts are plain commands: `dwxctl diagnose`,
-`dwxctl snapshot`, `dwxctl graph --format mermaid`.
+Prefer no AI? The same contracts are plain commands: `dwx mesh diagnose`,
+`dwx mesh snapshot`, `dwx mesh graph --format mermaid`.
 
 → **[docs/ai-agents.md](docs/ai-agents.md)** — setup, the full tool list, and the model-free / free-read-paid-act design.
 
@@ -151,16 +151,16 @@ See it work for yourself.  The 5 minute demo will create and link **two clusters
 **You need these prereqs to run the dmo:** Docker, `kind`, `kubectl`, `helm`, `wg` (wireguard-tools), and the WireGuard kernel module (`sudo modprobe wireguard`).
 
 
-> `dwxctl` (used below) is the operator CLI. Build it from this repo with `go build -o dwxctl ./cmd/dwxctl`. This drops it in `$pwd`, and/or put it on your `PATH`.
+> `dwx` (used below) is the operator CLI. Build it from this repo with `go build -o dwx ./cmd/dwx`. This drops it in `$pwd`, and/or put it on your `PATH`.
 
 Assume the project root for this example:
 
 ```sh
-go build -v -o dwxctl ./cmd/dwxctl/ # builds the mesh verifier
+go build -v -o dwx ./cmd/dwx/ # builds the mesh verifier
 
 hack/e2e/kind-up.sh                 # two kind clusters + agent + reciprocal peering
 
-dwxctl verify --context kind-dwx-a  # Verify mesh peers: 1 connected
+dwx mesh verify --context kind-dwx-a  # Verify mesh peers: 1 connected
 
 hack/demo/quickstart.sh             # export an echo Service in A, call it by name from B
 
@@ -204,7 +204,7 @@ Common settings (full list in **[docs/configuration.md](docs/configuration.md)**
 
 ## Install Follow-up
 
-- **Health:** `dwxctl verify` reports CRDs, the agent DaemonSet, peer phases, export validity, and import counts.
+- **Health:** `dwx mesh verify` reports CRDs, the agent DaemonSet, peer phases, export validity, and import counts.
 - **Metrics:** Prometheus instrumentation + a Grafana starter dashboard (`charts/datawerx-mesh/dashboards`).
 - **Guides:** [operations](docs/operations.md) · [troubleshooting](docs/troubleshooting.md) · [security](docs/security.md).
 
@@ -213,7 +213,7 @@ Common settings (full list in **[docs/configuration.md](docs/configuration.md)**
 | Guide | What it covers |
 |---|---|
 | **[Quickstart](docs/quickstart.md)** | Two clusters talking, in minutes. |
-| **[Install the CLIs](docs/install.md)** | `dwxctl` + `dwx-mcp` via Homebrew, download, or source; cosign verify; MCP setup. |
+| **[Install the CLI](docs/install.md)** | `dwx` via Homebrew, download, or source; cosign verify; `dwx mcp` MCP setup. |
 | **[Ask an AI about your mesh](docs/ai-agents.md)** | The read-only MCP server, the state contracts, and how to wire up Claude or any agent. |
 | **[How it works](docs/how-it-works.md)** | The whole system in one page. |
 | **[Architecture](ARCHITECTURE.md)** | Components, data flow, design rules. |

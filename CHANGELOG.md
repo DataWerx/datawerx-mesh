@@ -12,7 +12,21 @@ called out as such.
 
 ## [Unreleased]
 
-Nothing yet — changes land here after v0.2.0.
+### Added
+
+- **Unified `dwx` CLI (design 0016).** A single AWS-style binary fronts every
+  free service as a noun: `dwx mesh` (verify/snapshot/diagnose/graph/reach/slo/
+  policy/join), `dwx edge`, `dwx signal`, and `dwx mcp`. Premium services are
+  discovered at runtime as `dwx-<service>` PATH plugins (kubectl-style), so the
+  open core links no premium code. The CLI logic now lives in importable
+  `internal/cli/{mesh,mcp,signalcli}` packages.
+
+### Changed
+
+- **`dwxctl`, `dwx-mcp`, and `dwx-signal` are deprecated aliases** for
+  `dwx mesh`, `dwx mcp`, and `dwx signal`. They still ship and work (the cask
+  installs all three) and `dwx` also honors them via multi-call when symlinked;
+  `dwxctl`/`dwx-signal` print a one-line stderr deprecation hint.
 
 ## [0.2.0] — 2026-06-22
 

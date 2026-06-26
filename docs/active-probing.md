@@ -1,6 +1,6 @@
 # Active mesh probing
 
-DataWerx's connectivity verdicts (`dwxctl slo`, the `mesh_connectivity` MCP tool)
+DataWerx's connectivity verdicts (`dwx mesh slo`, the `mesh_connectivity` MCP tool)
 reconcile what topology and policy *expect* against what the mesh is *observed* to
 be doing. Out of the box the observed signal is the WireGuard handshake age every
 agent already records — a handshake proves the tunnel is up. Active probing adds
@@ -53,10 +53,10 @@ Two metrics on the manager's `/metrics`:
 Failures are logged at info with a grounded reason (`dial failed`,
 `HTTP 503`, `misrouted`, …); successes log at debug (`-v 1`).
 
-## How it relates to `dwxctl slo`
+## How it relates to `dwx mesh slo`
 
 The prober writes its verdict back to each peer's `MeshPeer` status
-(`lastProbeAttempt` / `lastProbeTime`), and `dwxctl slo` and the
+(`lastProbeAttempt` / `lastProbeTime`), and `dwx mesh slo` and the
 `mesh_connectivity` MCP tool prefer that probe-observed liveness over the
 handshake whenever it is recent. So a peer that policy and topology permit and
 whose tunnel handshook — but whose application probe is failing — comes out
@@ -65,7 +65,7 @@ Disabling the prober reverts the verdict to handshake-observed on its own once
 the last probe ages out. Check it with:
 
 ```sh
-dwxctl slo --output text
+dwx mesh slo --output text
 kubectl get meshpeer <name> -o jsonpath='{.status.lastProbeTime}'
 ```
 

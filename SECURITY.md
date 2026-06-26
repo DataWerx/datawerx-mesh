@@ -80,6 +80,6 @@ setting rather than code.
       generated key).
 - [ ] Restrict who can create/modify `MeshPeer` objects — a `MeshPeer` is
       authorized network access into the cluster.
-- [ ] Run `dwxctl verify` after install and in monitoring.
+- [ ] Run `dwx mesh verify` after install and in monitoring.
 - [ ] Scrape the metrics endpoint and alert on `dwx_meshpeers{phase!="Connected"}`
       and `dwx_clusterset_nat_syncs_total{result="error"}`.

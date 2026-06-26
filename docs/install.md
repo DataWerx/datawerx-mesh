@@ -2,9 +2,9 @@
 
 DataWerx ships two operator-facing command-line tools:
 
-- **`dwxctl`** — the read-only operator CLI (`verify`, `snapshot`, `diagnose`,
+- **`dwx`** — the read-only operator CLI (`verify`, `snapshot`, `diagnose`,
   `graph`, `policy --dry-run`) plus `join` for zero-friction peering.
-- **`dwx-mcp`** — a read-only [Model Context Protocol](https://modelcontextprotocol.io)
+- **`dwx mcp`** — a read-only [Model Context Protocol](https://modelcontextprotocol.io)
   server that exposes the mesh's state to any MCP-speaking agent.
 
 The agent itself (the DaemonSet) is installed separately via the Helm chart
@@ -16,21 +16,22 @@ CI.
 ## Homebrew (macOS / Linux)
 
 ```sh
-brew install datawerx/tap/dwxctl
+brew install datawerx/tap/dwx
 ```
 
-The formula installs both `dwxctl` and `dwx-mcp`.
+The cask installs the unified `dwx` CLI, plus the deprecated `dwxctl` and
+`dwx-mcp` aliases for backward compatibility.
 
 ## Direct download
 
 Grab the archive for your platform from the
 [latest release](https://github.com/DataWerx/datawerx-mesh/releases/latest),
-extract it, and put the binaries on your `PATH`:
+extract it, and put the binary on your `PATH`:
 
 ```sh
 tar -xzf datawerx_<version>_<os>_<arch>.tar.gz
-sudo install dwxctl dwx-mcp /usr/local/bin/
-dwxctl version
+sudo install dwx /usr/local/bin/
+dwx version
 ```
 
 ## Windows (PowerShell)
@@ -44,10 +45,10 @@ extract it, and put the `.exe`s on your `PATH`:
 Expand-Archive datawerx_<version>_windows_amd64.zip -DestinationPath $Env:USERPROFILE\dwx
 # add to PATH for this session; persist via System → Environment Variables
 $Env:PATH += ";$Env:USERPROFILE\dwx"
-dwxctl.exe version
+dwx.exe version
 ```
 
-`dwxctl` and `dwx-mcp` read your kubeconfig the standard way
+`dwx` and `dwx mcp` read your kubeconfig the standard way
 (`%USERPROFILE%\.kube\config` or the `KUBECONFIG` variable), so they work against
 any cluster your `kubectl` already reaches. The cosign verification below works on
 Windows too (use `Get-FileHash` instead of `sha256sum` for the checksum check).
@@ -74,13 +75,13 @@ Each archive also ships an SBOM (`*.sbom.json`, SPDX) for supply-chain auditing.
 ## From source
 
 ```sh
-CGO_ENABLED=0 go build -o dwxctl  ./cmd/dwxctl
-CGO_ENABLED=0 go build -o dwx-mcp ./cmd/dwx-mcp
+CGO_ENABLED=0 go build -o dwx  ./cmd/dwx
+CGO_ENABLED=0 go build -o dwx ./cmd/dwx
 ```
 
-## Use `dwx-mcp` with an MCP host
+## Use `dwx mcp` with an MCP host
 
-`dwx-mcp` speaks MCP over stdio, so any MCP host can launch it. It reads the
+`dwx mcp` speaks MCP over stdio, so any MCP host can launch it. It reads the
 mesh through your kubeconfig (read-only — it exposes no mutating tools).
 
 **Claude Desktop / Claude Code** — add to your MCP config
@@ -90,7 +91,7 @@ mesh through your kubeconfig (read-only — it exposes no mutating tools).
 {
   "mcpServers": {
     "datawerx-mesh": {
-      "command": "dwx-mcp",
+      "command": "dwx mcp",
       "args": ["--context", "my-cluster"]
     }
   }

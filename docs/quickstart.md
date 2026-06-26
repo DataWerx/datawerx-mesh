@@ -10,7 +10,7 @@ identical on real clusters.
 
 ```sh
 hack/e2e/kind-up.sh                 # two kind clusters + agent + reciprocal peering
-dwxctl verify --context kind-dwx-a  # → Mesh peers: 1 connected
+dwx mesh verify --context kind-dwx-a  # → Mesh peers: 1 connected
 hack/demo/quickstart.sh             # export an echo Service in A, call it by name from B → hi-from-a
 hack/e2e/kind-down.sh               # clean up
 ```
@@ -86,7 +86,7 @@ EOF
 peer kind-dwx-a cluster-b "$PUB_B" "$IP_B:51820" 10.245.0.0/16 10.97.0.0/16
 peer kind-dwx-b cluster-a "$PUB_A" "$IP_A:51820" 10.244.0.0/16 10.96.0.0/16
 
-dwxctl verify --context kind-dwx-a   # → Mesh peers: 1 connected
+dwx mesh verify --context kind-dwx-a   # → Mesh peers: 1 connected
 ```
 
 ## 5. Export a service and call it across the mesh
@@ -123,15 +123,15 @@ tunnel — no LoadBalancer, no public IP.
 ## 6. Ask an AI about your mesh (optional)
 
 The same state you just verified is available to any AI agent through a
-**read-only** MCP server. With `dwx-mcp` on your `PATH` (built from
-`./cmd/dwx-mcp`, or via [install](install.md)), point Claude Desktop or Claude
+**read-only** MCP server. With `dwx mcp` on your `PATH` (built from
+`./cmd/dwx`, or via [install](install.md)), point Claude Desktop or Claude
 Code at the cluster — add to your MCP host config (`claude_desktop_config.json`
 or `.mcp.json`):
 
 ```json
 {
   "mcpServers": {
-    "datawerx-mesh": { "command": "dwx-mcp", "args": ["--context", "kind-dwx-a"] }
+    "datawerx-mesh": { "command": "dwx mcp", "args": ["--context", "kind-dwx-a"] }
   }
 }
 ```
@@ -141,8 +141,8 @@ Restart the host, then ask *"is the DataWerx mesh healthy, and what's it importi
 Prefer the terminal? The agent reads exactly what these print:
 
 ```sh
-dwxctl diagnose --context kind-dwx-a          # grounded "obvious cause" findings
-dwxctl graph --context kind-dwx-a --format mermaid   # paste into any Markdown to see the topology
+dwx mesh diagnose --context kind-dwx-a          # grounded "obvious cause" findings
+dwx mesh graph --context kind-dwx-a --format mermaid   # paste into any Markdown to see the topology
 ```
 
 → **[Ask an AI about your mesh](ai-agents.md)** for the full tool list and the design.

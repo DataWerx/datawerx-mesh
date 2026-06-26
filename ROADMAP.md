@@ -109,7 +109,7 @@ Make exported services resolvable by name across the mesh.
       starter dashboard; observability docs in `docs/configuration.md`.
 - [x] Helm chart (`charts/datawerx-mesh`: DaemonSet, RBAC, CRDs, DNS Service,
       premium opts, metrics Service/ServiceMonitor; lint+template CI).
-- [x] `dwxctl verify` health diagnostics (`cmd/dwxctl` + pure `pkg/verify`:
+- [x] `dwx mesh verify` health diagnostics (`cmd/dwx` + pure `pkg/verify`:
       CRDs, agent DaemonSet, peer phases, export validity, import counts).
 
 ### Milestone 3 — Overlap handling (free basics)
@@ -144,22 +144,22 @@ a data contract, never an inference dependency.**
 
 | Capability | Free hook (Apache-2.0) | Paid seam (hosted/closed) |
 |---|---|---|
-| **Mesh state snapshot** | versioned `MeshSnapshot` JSON via `dwxctl snapshot` ([0005](docs/design/0005-mesh-snapshot.md)) | fleet-wide ingestion, history, cross-cluster rollups |
-| **Connectivity diagnosis** | rule-based "obvious cause" checker citing signals (`dwxctl diagnose`) | hosted LLM → root cause + exact fix, opens the PR ("AI SRE") |
-| **Zero-friction join** | `dwxctl join` bootstrap bundle ([0006](docs/design/0006-zero-friction-join.md)) | zero-touch fleet auto-mesh from one SSO token |
-| **Read-only mesh MCP** | `dwx-mcp` read tools over the snapshot ([0007](docs/design/0007-mesh-mcp-server.md)) | **act** MCP (apply/mutate) behind SSO/RBAC + audit |
-| **Intent dry-run** | pure change-impact planner (`dwxctl policy --dry-run`, [0008](docs/design/0008-intent-dryrun-planner.md)) | LLM compiling NL → CRDs, gated by the free planner |
+| **Mesh state snapshot** | versioned `MeshSnapshot` JSON via `dwx mesh snapshot` ([0005](docs/design/0005-mesh-snapshot.md)) | fleet-wide ingestion, history, cross-cluster rollups |
+| **Connectivity diagnosis** | rule-based "obvious cause" checker citing signals (`dwx mesh diagnose`) | hosted LLM → root cause + exact fix, opens the PR ("AI SRE") |
+| **Zero-friction join** | `dwx mesh join` bootstrap bundle ([0006](docs/design/0006-zero-friction-join.md)) | zero-touch fleet auto-mesh from one SSO token |
+| **Read-only mesh MCP** | `dwx mcp` read tools over the snapshot ([0007](docs/design/0007-mesh-mcp-server.md)) | **act** MCP (apply/mutate) behind SSO/RBAC + audit |
+| **Intent dry-run** | pure change-impact planner (`dwx mesh policy --dry-run`, [0008](docs/design/0008-intent-dryrun-planner.md)) | LLM compiling NL → CRDs, gated by the free planner |
 
 - [x] Mesh state snapshot — pure assembly in `pkg/verify`, schema-versioned JSON,
-      `dwxctl snapshot` / `verify --output json`.
+      `dwx mesh snapshot` / `verify --output json`.
 - [x] Rule-based connectivity diagnosis — `verify.Diagnose`, grounded findings
-      that cite their signal, surfaced by `dwxctl diagnose`.
-- [x] Zero-friction join — pure `pkg/bootstrap` bundle/keygen + `dwxctl join`
+      that cite their signal, surfaced by `dwx mesh diagnose`.
+- [x] Zero-friction join — pure `pkg/bootstrap` bundle/keygen + `dwx mesh join`
       export/import (idempotent reciprocal `MeshPeer` authoring).
-- [x] Read-only mesh MCP server — `cmd/dwx-mcp`, stdio JSON-RPC, zero mutating
+- [x] Read-only mesh MCP server — `cmd/dwx`, stdio JSON-RPC, zero mutating
       tools in the free build (free-read / paid-act seam).
 - [x] Intent dry-run / change-impact planner — pure `pkg/impact` composing
-      `meshfw` + `topology`, `dwxctl policy --dry-run`.
+      `meshfw` + `topology`, `dwx mesh policy --dry-run`.
 - [ ] Hosted AI diagnosis, NL→CRD compiler, and act MCP — **paid**, private repo,
       consuming the contracts above over `EnterpriseControlPlaneClient`.
 - [ ] BYO-LLM / on-prem inference tier for the FIPS/compliance audience.

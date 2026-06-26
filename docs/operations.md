@@ -39,14 +39,14 @@ one (`TestReconcile_KeyRotationRemovesStalePeer`).
 
 ## Routine health checks
 
-- `dwxctl verify` — read-only health check for CRDs present, agent DaemonSet ready,   MeshPeers `Connected`, exports/imports valid). Safe to run anytime; exits non-zero on failure, so it doubles as a smoke test in CI.
-- `dwxctl snapshot` — emit the full versioned mesh state as stable JSON (peers, conflicts, exports/imports, policies, recent events, metric pointers); pipe it into `jq` or diff it over time.
-- `dwxctl diagnose` — rule-based "obvious cause" analysis of why the mesh is unhealthy, each finding citing the concrete signal it read; exits non-zero on a critical cause so it can gate a pipeline.
-- `dwxctl graph [--format json|dot|mermaid]` — render the mesh dependency graph (this cluster, its peers, and the services that flow between them); `--format dot | dot -Tsvg` draws it, `--format mermaid` embeds inline in a README or runbook.
-- `dwxctl reach [--output text|json]` — the expected cross-cluster reachability into this cluster: for each remote cluster, Reachable / Blocked / Degraded / Unreachable with the grounded reason (peer phase, CIDR conflict, or default-deny policy). The direct answer to "why can't A reach B".
-- `dwxctl slo [--output text|json]` — connectivity golden signals: reconciles expected reachability against observed tunnel liveness (the WireGuard handshake) into one verdict per cluster — Healthy, Impaired (should be reachable but the tunnel is dead), Blocked, Degraded, or Down. Exits non-zero on any Impaired cluster.
-- These read-only commands share one gather path with the `dwx-mcp` MCP server, so they can never disagree about what the mesh looks like.
-- `dwxctl snapshot --schema` / `dwxctl graph --schema` print the JSON Schema for each artifact (no cluster access). The schemas are published under [`docs/contracts/`](contracts/) for consumers to validate against.
+- `dwx mesh verify` — read-only health check for CRDs present, agent DaemonSet ready,   MeshPeers `Connected`, exports/imports valid). Safe to run anytime; exits non-zero on failure, so it doubles as a smoke test in CI.
+- `dwx mesh snapshot` — emit the full versioned mesh state as stable JSON (peers, conflicts, exports/imports, policies, recent events, metric pointers); pipe it into `jq` or diff it over time.
+- `dwx mesh diagnose` — rule-based "obvious cause" analysis of why the mesh is unhealthy, each finding citing the concrete signal it read; exits non-zero on a critical cause so it can gate a pipeline.
+- `dwx mesh graph [--format json|dot|mermaid]` — render the mesh dependency graph (this cluster, its peers, and the services that flow between them); `--format dot | dot -Tsvg` draws it, `--format mermaid` embeds inline in a README or runbook.
+- `dwx mesh reach [--output text|json]` — the expected cross-cluster reachability into this cluster: for each remote cluster, Reachable / Blocked / Degraded / Unreachable with the grounded reason (peer phase, CIDR conflict, or default-deny policy). The direct answer to "why can't A reach B".
+- `dwx mesh slo [--output text|json]` — connectivity golden signals: reconciles expected reachability against observed tunnel liveness (the WireGuard handshake) into one verdict per cluster — Healthy, Impaired (should be reachable but the tunnel is dead), Blocked, Degraded, or Down. Exits non-zero on any Impaired cluster.
+- These read-only commands share one gather path with the `dwx mcp` MCP server, so they can never disagree about what the mesh looks like.
+- `dwx mesh snapshot --schema` / `dwx mesh graph --schema` print the JSON Schema for each artifact (no cluster access). The schemas are published under [`docs/contracts/`](contracts/) for consumers to validate against.
 - Alert on `dwx_meshpeers{phase!="Connected"}`,   `dwx_clusterset_nat_syncs_total{result="error"}`, and
   `dwx_remap_syncs_total{result="error"}`.
 - Stale tunnels: `dwx_meshpeer_last_handshake_timestamp_seconds` going stale

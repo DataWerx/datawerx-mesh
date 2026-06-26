@@ -1,6 +1,6 @@
-# dwx-signal — grounded Q&A over a DataWerx mesh
+# dwx signal — grounded Q&A over a DataWerx mesh
 
-`dwx-signal` is the open-core core of **DataWerx Signal**.  It answers
+`dwx signal` is the open-core core of **DataWerx Signal**.  It answers
 natural-language questions about a mesh and returns a structured, grounded
 root-cause result.
 
@@ -8,7 +8,7 @@ root-cause result.
 
 The model never touches the cluster and never reasons from training priors. It
 reasons over **only** the evidence this tool assembles whici is the same 
-deterministic read surfaces `dwxctl` and `dwx-mcp` already serve:
+deterministic read surfaces `dwx` and `dwx mcp` already serve:
 
 - the versioned `verify.Snapshot` (health, peers, exports/imports, policies, events)
 - the rule-based `verify.Diagnose` findings (each carrying the `signal` it is grounded in)
@@ -19,23 +19,23 @@ Every claim in the answer must cite the evidence signal it came from. The model
 selects, ranks, and explains; the facts come from the deterministic engines, so
 an answer can never drift from what `snapshot`/`diagnose`/`reach`/`slo` report.
 
-It is **read-only**, exactly like `dwx-mcp`. Acting on the mesh stays the
+It is **read-only**, exactly like `dwx mcp`. Acting on the mesh stays the
 governed, audited, premium surface.
 
 ## Usage
 
 ```sh
-# From a snapshot file (dwxctl snapshot / dwx-mcp output) — no cluster needed.
-dwx-signal --snapshot snap.json "Why can't payments reach inventory?"
+# From a snapshot file (dwx mesh snapshot / dwx mcp output) — no cluster needed.
+dwx signal --snapshot snap.json "Why can't payments reach inventory?"
 
 # Live cluster (uses the ambient kubeconfig / in-cluster service account).
-dwx-signal "Which clusters are unhealthy?"
+dwx signal "Which clusters are unhealthy?"
 
 # Inspect the exact grounded evidence the model would receive — no API key.
-dwx-signal --print-context --snapshot snap.json "anything"
+dwx signal --print-context --snapshot snap.json "anything"
 
 # JSON output, for piping into the AI ops layer.
-dwx-signal --json --snapshot snap.json "Explain the connectivity problem"
+dwx signal --json --snapshot snap.json "Explain the connectivity problem"
 ```
 
 The question may also be piped on stdin. The model is reached over the standard

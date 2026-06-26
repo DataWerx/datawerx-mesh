@@ -18,7 +18,7 @@ not move them behind a paywall:
 - **Cross-cluster DNS** via the MCS API (`ServiceExport` / `ServiceImport` /
   `clusterset.local`) — export, import, the responder, and headless propagation.
 - **Basic overlapping-CIDR** handling.
-- The Helm chart, `dwxctl`, Prometheus metrics, and the Grafana dashboard.
+- The Helm chart, `dwx`, Prometheus metrics, and the Grafana dashboard.
 
 If we ever need to revise this list, we will do so transparently and never
 retroactively for an already-released version.

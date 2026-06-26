@@ -34,7 +34,7 @@ the declared desired state, identically in the free and premium tiers.
 
 ```
 cmd/manager        Agent entry point: tier selection, WG bring-up, controller wiring, signals.
-cmd/dwxctl         Operator CLI (`verify`).
+cmd/dwx            Unified CLI: `dwx mesh|edge|signal|mcp` (logic in internal/cli/*).
 
 pkg/apis/…         CRD types (+ hand-written deepcopy, no codegen):
   networking.datawerx.io   MeshPeer, EndpointExport, MeshNetworkPolicy
@@ -51,7 +51,7 @@ pkg/routed         BYO-overlay data plane: host routes over an existing overlay 
 pkg/dataplane/ebpf Premium TC/eBPF overlap-remap backend (pure map planner; kernel loader is the paid build).
 pkg/dnsserver      Authoritative clusterset.local responder (miekg/dns) + cache-backed resolver.
 pkg/metrics        Prometheus instrumentation (cache-backed state collector + event metrics).
-pkg/verify         PURE: dwxctl health-check report logic.
+pkg/verify         PURE: dwx health-check report logic.
 pkg/controllers    Thin reconcilers tying the above together.
 ```
 

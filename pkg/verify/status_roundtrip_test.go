@@ -7,7 +7,7 @@ import (
 
 // TestStatusRoundTrip locks the snapshot contract: a status serialized by
 // MarshalText must read back through UnmarshalText to the same value, so a
-// snapshot emitted by dwxctl/dwx-mcp can be re-ingested (e.g. by dwx-signal).
+// snapshot emitted by `dwx mesh`/`dwx mcp` can be re-ingested (e.g. by `dwx signal`).
 func TestStatusRoundTrip(t *testing.T) {
 	for _, s := range []Status{StatusPass, StatusWarn, StatusFail} {
 		b, err := json.Marshal(s)
@@ -32,7 +32,7 @@ func TestStatusUnmarshalRejectsUnknown(t *testing.T) {
 }
 
 // TestSnapshotJSONRoundTrip ensures a full snapshot survives a marshal/unmarshal
-// cycle — the exact path dwx-signal uses when reading a snapshot file.
+// cycle — the exact path dwx signal uses when reading a snapshot file.
 func TestSnapshotJSONRoundTrip(t *testing.T) {
 	snap := BuildSnapshot(SnapshotInputs{
 		Now:          1000,

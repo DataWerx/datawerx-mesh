@@ -118,12 +118,12 @@ jobs:
       # Linux-only import (e.g. the go-iptables-via-pkg/meshfw issue that shipped
       # a broken Windows build in the first release cut).
       - name: Build the operator CLIs (windows)
-        run: go build ./cmd/dwxctl ./cmd/dwx-mcp
+        run: go build ./cmd/dwx ./cmd/dwxctl ./cmd/dwx-mcp ./cmd/dwx-signal
 
-      - name: Smoke-run dwxctl
+      - name: Smoke-run dwx
         run: |
-          go build -o dwxctl.exe ./cmd/dwxctl
-          ./dwxctl.exe version
+          go build -o dwx.exe ./cmd/dwx
+          ./dwx.exe version
 
       - name: Unit tests (cross-platform packages)
         run: go test ./pkg/topology/... ./pkg/verify/... ./pkg/bootstrap/... ./pkg/impact/... ./pkg/meshgraph/... ./pkg/reach/... ./pkg/slo/... ./pkg/meshfw/... ./pkg/contract/...
