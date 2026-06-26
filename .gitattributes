@@ -3,6 +3,11 @@
 ###############################################################################
 * text=auto
 
+# Golden contract schemas are byte-compared against generator output in tests
+# (TestContractSchemasMatchGolden). Pin them to LF so a Windows checkout doesn't
+# smudge them to CRLF and fail the comparison against the LF-generated schema.
+docs/contracts/*.json text eol=lf
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #
