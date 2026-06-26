@@ -102,6 +102,14 @@ spec:
             - name: DataWerx_REMAP_BACKEND
               value: {{ .Values.remapBackend | quote }}
             {{- end }}
+            {{- if .Values.failover }}
+            - name: DataWerx_LB_FAILOVER
+              value: {{ .Values.failover | quote }}
+            {{- end }}
+            {{- if .Values.probe.enabled }}
+            - name: DataWerx_PROBE_ENABLE
+              value: {{ .Values.probe.enabled | quote }}
+            {{- end }}
             {{- if .Values.dnsBind }}
             - name: DataWerx_DNS_BIND
               value: {{ .Values.dnsBind | quote }}
