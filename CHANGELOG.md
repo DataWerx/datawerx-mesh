@@ -12,7 +12,19 @@ called out as such.
 
 ## [Unreleased]
 
-Nothing yet — changes land here after v0.3.0.
+Nothing yet — changes land here after v0.3.1.
+
+## [0.3.1] — 2026-06-25
+
+### Fixed
+
+- **Agent image build.** The Dockerfile now copies `internal/` into the build
+  stage, so `cmd/manager` (→ `pkg/agent` → `internal/meshstate`) compiles. The
+  missing copy was invisible to `go build ./...` and unit tests (they see the
+  whole tree) but broke the multi-arch image build. As a result v0.3.0 published
+  the CLI archives and Homebrew cask but its agent image and Helm chart did not
+  build; **v0.3.1 is the first complete v0.3.x release** — signed image, OCI
+  chart, CLI archives, and cask.
 
 ## [0.3.0] — 2026-06-25
 
@@ -140,7 +152,8 @@ that ships it.
   Scorecard, Dependabot, Go native fuzzing of the parsers, and SHA-pinned GitHub
   Actions. Reporting policy and an operator hardening checklist in `SECURITY.md`.
 
-[Unreleased]: https://github.com/DataWerx/datawerx-mesh/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/DataWerx/datawerx-mesh/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/DataWerx/datawerx-mesh/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/DataWerx/datawerx-mesh/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/DataWerx/datawerx-mesh/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DataWerx/datawerx-mesh/releases/tag/v0.1.0

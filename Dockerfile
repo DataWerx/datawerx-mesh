@@ -11,9 +11,14 @@ WORKDIR /workspace
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Build.
+# Build. Copy every source tree cmd/manager's dependency graph reaches —
+# including internal/ (cmd/manager -> pkg/agent -> internal/meshstate). Omitting
+# internal/ here is invisible to `go build ./...` and unit tests (they see the
+# whole tree) but breaks this image build, so keep this in sync with the agent's
+# imports.
 COPY cmd/ cmd/
 COPY pkg/ pkg/
+COPY internal/ internal/
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
 # VERSION stamps the build identity surfaced in the agent's startup log banner
