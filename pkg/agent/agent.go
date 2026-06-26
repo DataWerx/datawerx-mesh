@@ -133,6 +133,15 @@ const (
 	// in a build compiled with -tags ebpf_datapath).
 	envRemapBackend = "DataWerx_REMAP_BACKEND"
 
+	// envLBFailover enables health-gated ClusterSetIP load-balancing: backends
+	// exported by a meshed cluster whose tunnel is observably down (stale probe
+	// or handshake) are dropped from the DNAT set, so traffic fails over to the
+	// remaining exporters. Off by default — liveness is reported but not
+	// enforced. Best paired with DataWerx_PROBE_ENABLE, whose active probe is a
+	// traffic-independent liveness signal (a handshake alone goes stale on an
+	// idle but healthy tunnel).
+	envLBFailover = "DataWerx_LB_FAILOVER"
+
 	// envRole selects an optional extra role for this agent. "gateway" turns the
 	// node into a remote-access gateway: it programs a masquerade so traffic from
 	// remote clients (laptops on a shared overlay) returns via this node, and
@@ -420,6 +429,11 @@ func registerNATReconcilers(mgr ctrl.Manager, cfg appConfig, natManager *nat.Man
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		DataPlane: natManager,
+	}
+	if envOn(os.Getenv(envLBFailover)) {
+		natReconciler.FailoverStaleSeconds = controllers.DefaultFailoverStaleSeconds
+		setupLog.Info("health-gated ClusterSetIP failover enabled",
+			"staleSeconds", controllers.DefaultFailoverStaleSeconds)
 	}
 	if err := natReconciler.SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("registering ServiceNAT controller: %w", err)
@@ -911,6 +925,17 @@ func resolveRemapPool(v string) string {
 		return topology.DefaultRemapPool
 	default:
 		return v
+	}
+}
+
+// envOn reports whether a boolean-style env value (e.g. DataWerx_LB_FAILOVER) is
+// enabled. Anything other than an explicit truthy token is treated as off.
+func envOn(v string) bool {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "1", "true", "on", "enabled", "yes":
+		return true
+	default:
+		return false
 	}
 }
 

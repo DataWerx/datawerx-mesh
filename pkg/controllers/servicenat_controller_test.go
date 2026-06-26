@@ -143,8 +143,112 @@ func TestServiceNAT_SyncErrorSurfaces(t *testing.T) {
 func TestBuildServiceDNAT_Pure(t *testing.T) {
 	imports := []mcsv1alpha1.ServiceImport{*clusterSetImport("prod", "payments", "241.0.0.5", 80)}
 	exports := []networkingv1alpha1.EndpointExport{*clusterSetExport("a-payments", "a", "prod", "payments", "10.96.0.10")}
-	out := controllers.BuildServiceDNAT(imports, exports)
+	out := controllers.BuildServiceDNAT(imports, exports, nil)
 	if len(out) != 1 || out[0].VIP != "241.0.0.5" || len(out[0].Backends) != 1 {
 		t.Fatalf("unexpected ServiceDNAT: %#v", out)
+	}
+}
+
+func meshPeer(cluster string, phase networkingv1alpha1.MeshPeerPhase, lastHandshake int64) *networkingv1alpha1.MeshPeer {
+	return &networkingv1alpha1.MeshPeer{
+		ObjectMeta: metav1.ObjectMeta{Name: cluster},
+		Spec:       networkingv1alpha1.MeshPeerSpec{ClusterID: cluster, PublicKey: "k-" + cluster},
+		Status:     networkingv1alpha1.MeshPeerStatus{Phase: phase, LastHandshakeTime: lastHandshake},
+	}
+}
+
+func TestBuildServiceDNAT_DropsDownClusters(t *testing.T) {
+	imports := []mcsv1alpha1.ServiceImport{*clusterSetImport("prod", "payments", "241.0.0.5", 80)}
+	exports := []networkingv1alpha1.EndpointExport{
+		*clusterSetExport("a-payments", "a", "prod", "payments", "10.96.0.10"),
+		*clusterSetExport("b-payments", "b", "prod", "payments", "10.97.0.10"),
+	}
+	out := controllers.BuildServiceDNAT(imports, exports, map[string]bool{"b": true})
+	if len(out) != 1 {
+		t.Fatalf("want 1 service, got %d: %#v", len(out), out)
+	}
+	if len(out[0].Backends) != 1 || out[0].Backends[0] != "10.96.0.10" {
+		t.Fatalf("want only live cluster a's backend, got %v", out[0].Backends)
+	}
+}
+
+func TestBuildServiceDNAT_AllExportersDownSkipsService(t *testing.T) {
+	imports := []mcsv1alpha1.ServiceImport{*clusterSetImport("prod", "payments", "241.0.0.5", 80)}
+	exports := []networkingv1alpha1.EndpointExport{
+		*clusterSetExport("a-payments", "a", "prod", "payments", "10.96.0.10"),
+	}
+	out := controllers.BuildServiceDNAT(imports, exports, map[string]bool{"a": true})
+	if len(out) != 0 {
+		t.Fatalf("want service skipped when all exporters down, got %#v", out)
+	}
+}
+
+func TestDownClusters(t *testing.T) {
+	const now = int64(10_000)
+	stale := controllers.DefaultFailoverStaleSeconds
+	peers := []networkingv1alpha1.MeshPeer{
+		*meshPeer("fresh", networkingv1alpha1.MeshPeerPhaseConnected, now-10),
+		*meshPeer("stale", networkingv1alpha1.MeshPeerPhaseConnected, now-(stale+60)),
+		*meshPeer("errored", networkingv1alpha1.MeshPeerPhaseError, now-5),
+		*meshPeer("pending", networkingv1alpha1.MeshPeerPhasePending, 0),
+	}
+	down := controllers.DownClusters(peers, now, stale)
+	if down["fresh"] {
+		t.Errorf("fresh peer should be live, not down")
+	}
+	if !down["stale"] {
+		t.Errorf("stale-handshake peer should be down")
+	}
+	if !down["errored"] {
+		t.Errorf("errored peer should be down")
+	}
+	if down["pending"] {
+		t.Errorf("never-handshaked peer should not be marked down (fail open)")
+	}
+}
+
+func TestDownClusters_ProbePreferredOverHandshake(t *testing.T) {
+	const now = int64(10_000)
+	stale := controllers.DefaultFailoverStaleSeconds
+	// Fresh handshake, but the active prober ran recently and has no success —
+	// the probe is authoritative, so the cluster is down.
+	p := &networkingv1alpha1.MeshPeer{
+		ObjectMeta: metav1.ObjectMeta{Name: "probed"},
+		Spec:       networkingv1alpha1.MeshPeerSpec{ClusterID: "probed", PublicKey: "k"},
+		Status: networkingv1alpha1.MeshPeerStatus{
+			Phase:             networkingv1alpha1.MeshPeerPhaseConnected,
+			LastHandshakeTime: now - 5,
+			LastProbeAttempt:  now - 5,
+			LastProbeTime:     0,
+		},
+	}
+	if down := controllers.DownClusters([]networkingv1alpha1.MeshPeer{*p}, now, stale); !down["probed"] {
+		t.Errorf("a recently-probed peer with no successful probe should be down despite a fresh handshake")
+	}
+}
+
+func TestServiceNAT_FailoverDropsDownExporter(t *testing.T) {
+	const now = int64(10_000)
+	si := clusterSetImport("prod", "payments", "241.0.0.5", 80)
+	a := clusterSetExport("a-payments", "a", "prod", "payments", "10.96.0.10")
+	b := clusterSetExport("b-payments", "b", "prod", "payments", "10.97.0.10")
+	peerA := meshPeer("a", networkingv1alpha1.MeshPeerPhaseConnected, now-10)
+	peerB := meshPeer("b", networkingv1alpha1.MeshPeerPhaseConnected, now-(controllers.DefaultFailoverStaleSeconds+60))
+
+	dp := &fakeNATDataPlane{}
+	r := newNATReconciler(t, dp, si, a, b, peerA, peerB)
+	r.FailoverStaleSeconds = controllers.DefaultFailoverStaleSeconds
+	r.Now = func() int64 { return now }
+
+	res, err := r.Reconcile(context.Background(), ctrl.Request{})
+	if err != nil {
+		t.Fatalf("reconcile: %v", err)
+	}
+	if res.RequeueAfter == 0 {
+		t.Errorf("expected a steady requeue when failover is enabled")
+	}
+	got := dp.synced()
+	if len(got) != 1 || len(got[0].Backends) != 1 || got[0].Backends[0] != "10.96.0.10" {
+		t.Fatalf("expected only live cluster a's backend, got %#v", got)
 	}
 }
