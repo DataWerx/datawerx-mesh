@@ -59,6 +59,8 @@ func Run(prog string, args []string, stdout, stderr io.Writer) error {
 	printContext := fs.Bool("print-context", false, "print the grounded evidence that would be sent to the model, then exit (no API key needed)")
 	asJSON := fs.Bool("json", false, "print the answer as JSON instead of formatted text")
 	model := fs.String("model", signal.DefaultModel, "Claude model to reason with")
+	provider := fs.String("provider", "anthropic", "model provider: anthropic or bedrock")
+	region := fs.String("region", "", "AWS region for -provider=bedrock (default: AWS_REGION)")
 	namespace := fs.String("namespace", "", "namespace the agent is installed in (default: datawerx-system)")
 	daemonset := fs.String("daemonset", "", "agent DaemonSet name (default: dwx-mesh-agent)")
 	kubeconfig := fs.String("kubeconfig", "", "path to kubeconfig (default: ambient)")
@@ -107,18 +109,30 @@ func Run(prog string, args []string, stdout, stderr io.Writer) error {
 		return nil
 	}
 
-	apiKey := os.Getenv("ANTHROPIC_API_KEY")
-	if apiKey == "" {
-		return fmt.Errorf("ANTHROPIC_API_KEY is not set; set it, or use --print-context to inspect the grounded evidence without a model call")
+	var prov signal.Provider
+	switch strings.ToLower(strings.TrimSpace(*provider)) {
+	case "", "anthropic":
+		apiKey := os.Getenv("ANTHROPIC_API_KEY")
+		if apiKey == "" {
+			return fmt.Errorf("ANTHROPIC_API_KEY is not set; set it, or use --print-context to inspect the grounded evidence without a model call")
+		}
+		c := signal.NewClient(apiKey)
+		c.Model = *model
+		prov = c
+	case "bedrock":
+		bc, err := signal.NewBedrockClient(*region, *model)
+		if err != nil {
+			return err
+		}
+		prov = bc
+	default:
+		return fmt.Errorf("unknown -provider %q (anthropic or bedrock)", *provider)
 	}
-
-	client := signal.NewClient(apiKey)
-	client.Model = *model
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	rc, err := client.Answer(ctx, question, ev)
+	rc, err := prov.Answer(ctx, question, ev)
 	if err != nil {
 		return err
 	}
