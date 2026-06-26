@@ -430,7 +430,7 @@ func registerNATReconcilers(mgr ctrl.Manager, cfg appConfig, natManager *nat.Man
 		Scheme:    mgr.GetScheme(),
 		DataPlane: natManager,
 	}
-	if envOn(os.Getenv(envLBFailover)) {
+	if boolEnv(envLBFailover) {
 		natReconciler.FailoverStaleSeconds = controllers.DefaultFailoverStaleSeconds
 		setupLog.Info("health-gated ClusterSetIP failover enabled",
 			"staleSeconds", controllers.DefaultFailoverStaleSeconds)
@@ -925,17 +925,6 @@ func resolveRemapPool(v string) string {
 		return topology.DefaultRemapPool
 	default:
 		return v
-	}
-}
-
-// envOn reports whether a boolean-style env value (e.g. DataWerx_LB_FAILOVER) is
-// enabled. Anything other than an explicit truthy token is treated as off.
-func envOn(v string) bool {
-	switch strings.ToLower(strings.TrimSpace(v)) {
-	case "1", "true", "on", "enabled", "yes":
-		return true
-	default:
-		return false
 	}
 }
 

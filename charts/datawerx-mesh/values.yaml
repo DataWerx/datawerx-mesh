@@ -65,6 +65,23 @@ remapCIDR: ""
 # built with -tags ebpf_datapath, otherwise the agent refuses to start).
 remapBackend: ""
 
+# Health-gated ClusterSetIP failover. Sets DataWerx_LB_FAILOVER. When true,
+# backends exported by a cluster whose tunnel is observably down are dropped from
+# the load balancer so traffic fails over to the remaining exporters. A cluster
+# counts as down when its probe or WireGuard handshake has gone stale, or when it
+# reports an Error phase. Off by default, so liveness is reported but not enforced
+# in the data plane. Enable the prober below alongside it. The active probe keeps
+# observing an idle tunnel, where the handshake alone would look stale.
+failover: false
+
+# Active synthetic prober. Sets DataWerx_PROBE_ENABLE. Each node runs a small
+# responder and dials its peers to observe real cross-cluster reachability. That
+# feeds the connectivity report and, when failover is on, the liveness signal
+# that drives backend eviction. Off by default. The probe port, 9998 by default,
+# must be reachable between nodes.
+probe:
+  enabled: false
+
 # Listen address of the clusterset.local DNS responder (DataWerx_DNS_BIND).
 dnsBind: ":5353"
 
