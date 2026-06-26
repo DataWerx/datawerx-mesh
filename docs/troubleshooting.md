@@ -72,6 +72,22 @@ are silently lost.
   it, the firewall is skipped (logged at startup) and routing still works.
 - Your overlay's ACLs must allow the pod/service ranges, not just node IPs.
 
+## Remote-access gateway (DataWerx_ROLE=gateway)
+
+- The gateway forwards client traffic into the mesh, so its nodes need
+  `net.ipv4.ip_forward=1`. The agent tries to set it at startup, but the
+  read-only `/proc/sys` mount blocks that unless the pod is privileged. Either
+  set `securityContext.privileged=true` on the gateway deployment, or pre-set
+  the sysctl on the nodes (`sysctl -w net.ipv4.ip_forward=1`). A log line like
+  `enabling IP forwarding for gateway role ... read-only file system` means the
+  write was blocked and you still need one of those two.
+- The gateway publishes its access profile to the `dwx-remote-access` ConfigMap
+  in `datawerx-system`. If it never appears, check that the agent's ClusterRole
+  grants `configmaps` (create/update). A reconcile error mentioning
+  `publishing access-profile ConfigMap` is the RBAC gap.
+- Clients reach mesh services through the gateway's masquerade. Confirm it with
+  `iptables -t nat -S DWX-GW-MASQ`.
+
 ## Agent crashlooping
 
 ```sh

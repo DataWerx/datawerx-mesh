@@ -528,7 +528,7 @@ func registerGatewayRole(mgr ctrl.Manager, cfg appConfig, dp controllers.Gateway
 	// sysctl, log and continue so the misconfiguration is visible without
 	// crash-looping the agent (the host may already have it enabled).
 	if err := gateway.EnableIPForward(); err != nil {
-		setupLog.Error(err, "enabling IP forwarding for gateway role; ensure ip_forward is set (pod securityContext) or the gateway will not route client traffic")
+		setupLog.Error(err, "enabling IP forwarding for gateway role; run the pod privileged or pre-set net.ipv4.ip_forward=1 on the gateway nodes, or the gateway will not route client traffic")
 	}
 
 	clusterSet := []string{getenvDefault(envClusterSetCIDR, controllers.DefaultClusterSetCIDR)}
