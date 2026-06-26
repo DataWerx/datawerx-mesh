@@ -127,3 +127,26 @@ jobs:
 
       - name: Unit tests (cross-platform packages)
         run: go test ./pkg/topology/... ./pkg/verify/... ./pkg/bootstrap/... ./pkg/impact/... ./pkg/meshgraph/... ./pkg/reach/... ./pkg/slo/... ./pkg/meshfw/... ./pkg/contract/...
+
+  agent-image:
+    name: agent image build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      # Build the agent image the same way release.yml does, but without pushing.
+      # The Dockerfile build stage uses a SELECTIVE COPY (cmd/ pkg/ internal/),
+      # so a source tree that cmd/manager's import graph reaches but the
+      # Dockerfile forgets to copy compiles fine under `go build ./...` and the
+      # unit tests (they see the whole tree) yet breaks the image build — which,
+      # until now, only ran at release time. That gap shipped a broken v0.3.0
+      # (cmd/manager -> pkg/agent -> internal/meshstate was not copied). This job
+      # closes it so the drift fails on the PR instead of the tag.
+      #
+      # Runs on every PR (no path filter): path-filtered guards have under-fired
+      # in this repo before, and the build is cheap enough to always run. Single
+      # linux/amd64 build via the preinstalled buildx — the failure mode (missing
+      # source / compile error) is architecture-independent, so one arch suffices
+      # and we avoid slow arm64 emulation. No new third-party action to SHA-pin.
+      - name: Build the agent image (no push)
+        run: docker build --build-arg VERSION=ci --tag datawerx-mesh/agent:ci .
