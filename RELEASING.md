@@ -9,7 +9,7 @@ two workflows that together produce everything a user installs.
 |----------|----------|--------------|
 | Multi-arch agent image (signed, with SBOM) | `.github/workflows/release.yml` | `ghcr.io/datawerx/datawerx-mesh/mesh-agent` |
 | Helm chart (OCI) | `.github/workflows/release.yml` | `oci://ghcr.io/datawerx/datawerx-mesh/charts` |
-| `dwxctl` + `dwx-mcp` archives (checksummed, SBOM'd, cosign-signed) | GoReleaser (`.goreleaser.yaml`) | the GitHub Release |
+| `dwx` CLI archive, with the deprecated `dwxctl`/`dwx-mcp` aliases (checksummed, SBOM'd, cosign-signed) | GoReleaser (`.goreleaser.yaml`) | the GitHub Release |
 | Homebrew cask | GoReleaser | `datawerx/homebrew-tap` |
 
 The image and chart job runs in `append` mode so GoReleaser and the chart upload
@@ -44,7 +44,7 @@ attach to the same Release without clobbering each other.
 Pre-1.0, the API may change between minor versions, but the `ControlPlaneClient`
 seam and the `MeshPeer` contract are stable per `COMMITMENT.md`. The CLI version
 is stamped into the binary via the GoReleaser `ldflags`
-(`pkg/logging.Version`), so `dwxctl version` reports the released tag.
+(`pkg/logging.Version`), so `dwx version` reports the released tag.
 
 ## Verifying a release
 

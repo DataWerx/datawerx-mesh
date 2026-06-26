@@ -4,8 +4,8 @@
 // github.com/coreos/go-iptables, which is Linux-only (it uses syscall.Flock and
 // friends and does not compile on Windows). The agent only ever runs on Linux,
 // so the applier is gated to linux; the pure MeshNetworkPolicy compiler in
-// plan.go/interpret.go stays cross-platform so the read-only CLIs (dwxctl,
-// dwx-mcp) — which import meshfw only for that compiler — build on darwin and
+// plan.go/interpret.go stays cross-platform so the read-only CLIs (dwx,
+// dwx mcp) — which import meshfw only for that compiler — build on darwin and
 // windows too.
 package meshfw
 

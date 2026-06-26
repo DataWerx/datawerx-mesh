@@ -3,7 +3,7 @@
 Start with the health check, then match your symptom below.
 
 ```sh
-dwxctl verify --context <ctx>
+dwx mesh verify --context <ctx>
 kubectl -n datawerx-system logs ds/dwx-mesh-agent --tail=100
 kubectl get meshpeer -o wide          # PHASE column: Pending | Connected | Error
 ```
@@ -85,5 +85,5 @@ with a clear message at startup).
 
 ## Still stuck?
 
-Open an issue with `dwxctl verify` output, the agent logs, and your `MeshPeer` /
+Open an issue with `dwx mesh verify` output, the agent logs, and your `MeshPeer` /
 `ServiceExport` YAML (redact keys). See [CONTRIBUTING.md](../CONTRIBUTING.md).

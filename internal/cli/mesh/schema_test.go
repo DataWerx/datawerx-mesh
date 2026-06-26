@@ -1,4 +1,4 @@
-package main
+package mesh
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 )
 
 // updateGolden rewrites the committed schema files instead of asserting against
-// them: go test ./cmd/dwxctl -update-golden.
+// them: go test ./internal/cli/mesh -update-golden.
 var updateGolden = flag.Bool("update-golden", false, "rewrite the committed contract schemas")
 
 type goldenCase struct {
@@ -28,7 +28,7 @@ func goldenCases() []goldenCase {
 }
 
 func goldenPath(file string) string {
-	return filepath.Join("..", "..", "docs", "contracts", file)
+	return filepath.Join("..", "..", "..", "docs", "contracts", file)
 }
 
 // TestContractSchemasMatchGolden asserts the published schema files under
@@ -55,7 +55,7 @@ func TestContractSchemasMatchGolden(t *testing.T) {
 				t.Fatalf("reading golden %s (run with -update-golden to create): %v", c.file, err)
 			}
 			if string(got) != string(want) {
-				t.Errorf("%s is stale — regenerate with: go test ./cmd/dwxctl -update-golden", c.file)
+				t.Errorf("%s is stale — regenerate with: go test ./internal/cli/mesh -update-golden", c.file)
 			}
 		})
 	}

@@ -33,7 +33,7 @@ type ProbeFunc func(ctx context.Context, target Target) Result
 type PeerLister func(ctx context.Context) ([]Peer, error)
 
 // Publisher persists a cycle's results back onto the mesh so the read surfaces
-// (dwxctl slo, mesh_connectivity) reflect probe-observed liveness, not just the
+// (dwx mesh slo, mesh_connectivity) reflect probe-observed liveness, not just the
 // handshake. The runtime implementation patches each peer's MeshPeer status;
 // tests supply a recorder. Like PeerLister it is a function so the Prober stays
 // free of Kubernetes types. Optional: when nil, results stay local (metrics and

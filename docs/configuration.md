@@ -39,7 +39,7 @@ Everything you can tune, in one place. Set values via the **Helm chart**
 ## Active mesh probing
 
 Off by default. Enable on every agent to observe true application-layer
-reachability between clusters, feeding the `dwxctl slo` verdict. See
+reachability between clusters, feeding the `dwx mesh slo` verdict. See
 **[Active mesh probing](active-probing.md)**.
 
 | Env var | Default | Purpose |
@@ -77,10 +77,10 @@ conventions, verbosity levels, and ready-to-paste recipes.
 | `DataWerx_LOG_CALLER` | `true` | Annotate each line with the emitting `file:line`. |
 | `DataWerx_LOG_DEVELOPMENT` | `false` | Console + debug developer defaults (≈ `--zap-devel`). |
 
-## Health check (`dwxctl`)
+## Health check (`dwx`)
 
 ```sh
-dwxctl verify --context <kube-context>   # MeshPeer phases, exports/imports, DNS, data plane
+dwx mesh verify --context <kube-context>   # MeshPeer phases, exports/imports, DNS, data plane
 ```
 
 A fast, read-only sanity check for an installed mesh — handy in CI and on call.

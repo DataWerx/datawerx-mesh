@@ -6,7 +6,7 @@
 // from raw cluster access or from training priors. It reasons only over the
 // EVIDENCE this package assembles — the same versioned snapshot, rule-based
 // diagnosis, expected-reachability matrix, and golden-signal SLO report that
-// `dwxctl` and `dwx-mcp` already serve. Every field those engines produce is
+// `dwx` and `dwx mcp` already serve. Every field those engines produce is
 // itself grounded in a concrete observation (a peer phase, a handshake age, a
 // conflict reason, the compiled firewall), so an answer can be required to cite
 // the signal it came from. The model selects, ranks, and explains; it does not
@@ -53,7 +53,7 @@ type Evidence struct {
 	// can reason about staleness and so an answer can be situated in time.
 	GeneratedAt int64 `json:"generatedAt,omitempty"`
 
-	// Health is the same pass/warn/fail report `dwxctl verify` renders.
+	// Health is the same pass/warn/fail report `dwx mesh verify` renders.
 	Health verify.Report `json:"health"`
 
 	Peers     []verify.PeerSnapshot   `json:"peers"`
@@ -79,7 +79,7 @@ type Evidence struct {
 
 // BuildEvidence assembles the grounded fact base from one snapshot. It composes
 // the same pure analyzers every other read surface uses, so Signal's evidence
-// can never disagree with `dwxctl snapshot/diagnose/reach/slo` or `dwx-mcp`.
+// can never disagree with `dwx mesh snapshot/diagnose/reach/slo` or `dwx mcp`.
 func BuildEvidence(snap verify.Snapshot) Evidence {
 	return Evidence{
 		GeneratedAt:  snap.GeneratedAt,

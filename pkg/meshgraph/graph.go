@@ -293,7 +293,7 @@ func (b *builder) sortedEdges() []Edge {
 // conflictClusters indexes the cluster IDs named directly by a topology
 // conflict, so a peering edge to a conflicted peer can be flagged. The detector
 // canonicalizes an overlap to one of the two cluster IDs, so this catches the
-// canonical side; the snapshot and `dwxctl diagnose` remain authoritative for
+// canonical side; the snapshot and `dwx mesh diagnose` remain authoritative for
 // the full conflict detail.
 func conflictClusters(conflicts []verify.ConflictReport) map[string]bool {
 	out := make(map[string]bool, len(conflicts))

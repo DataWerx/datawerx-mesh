@@ -2,7 +2,7 @@
 
 ![Ask Claude why a cluster can't reach this one; it calls the read-only mesh_reachability tool and answers with the grounded cause and fix](images/ai-demo.gif)
 
-*(Illustrative — the verdicts are the real output of `mesh_reachability` / `dwxctl reach`; regenerate the asset with `hack/demo/gen_ai_demo.py`.)*
+*(Illustrative — the verdicts are the real output of `mesh_reachability` / `dwx mesh reach`; regenerate the asset with `hack/demo/gen_ai_demo.py`.)*
 
 Multi-cluster networking fails in confusing ways — *"why can't A reach B?"* is
 the #1 support question, and the answer is scattered across peers, routes, DNS,
@@ -21,26 +21,26 @@ it publishes the mesh's state as **stable, machine-readable data contracts**, an
 ships a **read-only [MCP](https://modelcontextprotocol.io) server** so any agent
 can read them:
 
-- **The snapshot** (`dwxctl snapshot`) — one versioned JSON document with every
+- **The snapshot** (`dwx mesh snapshot`) — one versioned JSON document with every
   peer, conflict, export/import, policy, recent event, and health check.
-- **The dependency graph** (`dwxctl graph`) — who peers with whom, which services
+- **The dependency graph** (`dwx mesh graph`) — who peers with whom, which services
   flow between clusters, and which policies allow whom — as JSON, Graphviz, or
   Mermaid.
-- **The diagnosis** (`dwxctl diagnose`) — a deterministic, rule-based "obvious
+- **The diagnosis** (`dwx mesh diagnose`) — a deterministic, rule-based "obvious
   cause" checker. Every finding **cites the exact signal it read** (a peer phase,
   a handshake age, a CIDR overlap), so an AI explanation built on top stays
   grounded in fact instead of guessing.
-- **The reachability matrix** (`dwxctl reach`) — the direct answer to *"why can't
+- **The reachability matrix** (`dwx mesh reach`) — the direct answer to *"why can't
   A reach B?"*: for each remote cluster, whether it is expected to reach this one
   (Reachable / Blocked / Degraded / Unreachable) and the grounded reason — peer
   phase, a CIDR conflict, or a default-deny policy. It composes the real firewall
   compiler, so its verdict matches what the data plane programs.
-- **The connectivity golden signals** (`dwxctl slo`) — reconciles that *expected*
+- **The connectivity golden signals** (`dwx mesh slo`) — reconciles that *expected*
   reachability against the *observed* tunnel liveness (the WireGuard handshake)
   into one verdict per cluster: Healthy, **Impaired** (should be reachable but the
   tunnel is dead), Blocked, Degraded, or Down. The difference between "the config
   is right" and "it's actually working".
-- **The MCP server** (`dwx-mcp`) — exposes all of the above as agent tools.
+- **The MCP server** (`dwx mcp`) — exposes all of the above as agent tools.
 
 That is the differentiator: the signals an AI needs to diagnose cross-cluster
 connectivity (peer phase, handshake, CIDR conflict, NAT, DNS, policy) exist
@@ -49,14 +49,14 @@ contract.
 
 > **Free to read, governed to act.** Reading the mesh is open source and runs
 > anywhere. *Acting* on it — applying a fix, mutating a policy, rotating a key —
-> is deliberately **not** in this binary; there is no mutating tool in `dwx-mcp`,
+> is deliberately **not** in this binary; there is no mutating tool in `dwx mcp`,
 > by construction. The hosted "AI SRE" that proposes and opens a fix is the
 > additive paid layer (see [ROADMAP.md](../ROADMAP.md)); the OSS gives you the
 > grounded read surface it stands on.
 
 ## Set it up (Claude Desktop / Claude Code)
 
-`dwx-mcp` speaks MCP over stdio and reads your cluster through your kubeconfig.
+`dwx mcp` speaks MCP over stdio and reads your cluster through your kubeconfig.
 [Install the CLIs](install.md), then add the server to your MCP host config
 (`claude_desktop_config.json`, or `.mcp.json` for Claude Code):
 
@@ -64,7 +64,7 @@ contract.
 {
   "mcpServers": {
     "datawerx-mesh": {
-      "command": "dwx-mcp",
+      "command": "dwx mcp",
       "args": ["--context", "my-cluster"]
     }
   }
@@ -103,12 +103,12 @@ Everything the agent reads, you can read directly — the AI is a convenience ov
 the same contracts, not a dependency:
 
 ```sh
-dwxctl verify         # pass/warn/fail health check (exits non-zero on failure)
-dwxctl diagnose       # grounded "obvious cause" findings
-dwxctl reach          # why can't A reach this cluster — per-peer verdicts
-dwxctl slo            # connectivity golden signals — is it actually working
-dwxctl snapshot       # the full JSON snapshot — pipe into jq
-dwxctl graph --format mermaid   # paste into any Markdown doc to see the topology
+dwx mesh verify         # pass/warn/fail health check (exits non-zero on failure)
+dwx mesh diagnose       # grounded "obvious cause" findings
+dwx mesh reach          # why can't A reach this cluster — per-peer verdicts
+dwx mesh slo            # connectivity golden signals — is it actually working
+dwx mesh snapshot       # the full JSON snapshot — pipe into jq
+dwx mesh graph --format mermaid   # paste into any Markdown doc to see the topology
 ```
 
 ## The contracts are versioned and validated
@@ -119,15 +119,15 @@ what it receives. The schemas are generated from the same Go structs that emit
 the JSON, so they can't drift:
 
 ```sh
-dwxctl snapshot --schema    # the mesh snapshot JSON Schema
-dwxctl graph --schema       # the dependency graph JSON Schema
+dwx mesh snapshot --schema    # the mesh snapshot JSON Schema
+dwx mesh graph --schema       # the dependency graph JSON Schema
 ```
 
 ## Why this is trustworthy
 
 - **Model-free OSS.** The open-source binary never calls an LLM; it produces a
   data contract. Your topology and flows aren't sent anywhere by reading them.
-- **Grounded.** `dwxctl diagnose` (and the `mesh_diagnose` tool) cite the
+- **Grounded.** `dwx mesh diagnose` (and the `mesh_diagnose` tool) cite the
   concrete signal behind every finding — the contract any AI explanation must
   stay anchored to.
 - **Read-only by construction.** The free MCP server exposes zero mutating

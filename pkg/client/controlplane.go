@@ -334,7 +334,7 @@ func (c *EnterpriseControlPlaneClient) FetchTopologyWithRevision(ctx context.Con
 	return envelope.Peers, envelope.Revision, nil
 }
 
-// PushEvidence sends this cluster's grounded evidence report to the managed 
+// PushEvidence sends this cluster's grounded evidence report to the managed
 // control plane for the premium "DataWerx Signal" fleet view. It is additive
 // to the topology contract, not on the free ControlPlaneClient interface, so the
 // free tier never calls it. It reuses the hardened transport capped backoff on
