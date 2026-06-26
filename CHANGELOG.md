@@ -12,8 +12,25 @@ called out as such.
 
 ## [Unreleased]
 
+Nothing yet — changes land here after v0.3.0.
+
+## [0.3.0] — 2026-06-25
+
 ### Added
 
+- **DataWerx Signal — grounded AI over the mesh (designs 0014, 0015).** A
+  read-only natural-language layer that answers questions about a mesh and
+  returns a structured root-cause result. The model reasons over *only* the
+  deterministic evidence the existing read surfaces already produce (snapshot,
+  diagnosis, reachability, golden-signal SLO) and must cite the signal behind
+  every claim, so an answer can never drift from what
+  `dwx mesh snapshot/diagnose/reach/slo` report. It is reached over the
+  Anthropic Messages API using only the standard library (no new module
+  dependency); `dwx signal --print-context` prints the exact grounded evidence
+  with no API key required. The pure grounding contract is `pkg/signal`;
+  `pkg/evidence` adds the reporter that pushes Evidence to the premium control
+  plane's additive `POST /api/v1/evidence` endpoint for the fleet view. The
+  managed/fleet/historical tier is premium (datawerx-admin).
 - **Unified `dwx` CLI (design 0016).** A single AWS-style binary fronts every
   free service as a noun: `dwx mesh` (verify/snapshot/diagnose/graph/reach/slo/
   policy/join), `dwx edge`, `dwx signal`, and `dwx mcp`. Premium services are
@@ -123,6 +140,7 @@ that ships it.
   Scorecard, Dependabot, Go native fuzzing of the parsers, and SHA-pinned GitHub
   Actions. Reporting policy and an operator hardening checklist in `SECURITY.md`.
 
-[Unreleased]: https://github.com/DataWerx/datawerx-mesh/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/DataWerx/datawerx-mesh/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/DataWerx/datawerx-mesh/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/DataWerx/datawerx-mesh/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DataWerx/datawerx-mesh/releases/tag/v0.1.0

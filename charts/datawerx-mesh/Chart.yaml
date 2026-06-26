@@ -6,9 +6,9 @@ description: |
   WireGuard with cross-cluster MCS service discovery, RBAC, CRDs, and
   clusterset.local DNS responder it needs.
 type: application
-version: 0.2.0
+version: 0.3.0
 # appVersion tracks the agent image tag the chart ships by default.
-appVersion: "0.2.0"
+appVersion: "0.3.0"
 keywords:
   - multi-cluster
   - wireguard
@@ -38,7 +38,7 @@ annotations:
       url: https://github.com/DataWerx/datawerx-mesh/blob/main/CHANGELOG.md
   artifacthub.io/images: |
     - name: mesh-agent
-      image: ghcr.io/datawerx/datawerx-mesh/mesh-agent:0.2.0
+      image: ghcr.io/datawerx/datawerx-mesh/mesh-agent:0.3.0
   artifacthub.io/crds: |
     - kind: MeshPeer
       version: v1alpha1
