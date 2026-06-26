@@ -206,12 +206,17 @@ func userContent(question string, ev Evidence) (string, error) {
 // public Messages API contract.
 
 type apiRequest struct {
-	Model        string          `json:"model"`
-	MaxTokens    int             `json:"max_tokens"`
-	System       string          `json:"system,omitempty"`
-	Thinking     *thinkingConfig `json:"thinking,omitempty"`
-	OutputConfig outputConfig    `json:"output_config"`
-	Messages     []apiMessage    `json:"messages"`
+	// Model is the Anthropic model id. On Bedrock the model is in the URL path
+	// instead, so it is omitted and AnthropicVersion is set.
+	Model string `json:"model,omitempty"`
+	// AnthropicVersion is set only for Bedrock InvokeModel ("bedrock-2023-05-31"),
+	// where it replaces the model field and the version header.
+	AnthropicVersion string          `json:"anthropic_version,omitempty"`
+	MaxTokens        int             `json:"max_tokens"`
+	System           string          `json:"system,omitempty"`
+	Thinking         *thinkingConfig `json:"thinking,omitempty"`
+	OutputConfig     outputConfig    `json:"output_config"`
+	Messages         []apiMessage    `json:"messages"`
 }
 
 type thinkingConfig struct {
