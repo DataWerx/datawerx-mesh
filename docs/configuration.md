@@ -18,6 +18,7 @@ Everything you can tune, in one place. Set values via the **Helm chart**
 |---|---|---|---|
 | `wireguard.privateKey.existingSecret` | `DataWerx_WG_PRIVATE_KEY` | _(ephemeral)_ | Node WireGuard key (base64), normally a projected Secret. Ephemeral keys don't survive restart. |
 | `wgInterface` | `DataWerx_WG_INTERFACE` | `dwx-mesh0` | Managed link name. |
+| `wgAddress` | `DataWerx_WG_ADDRESS` | _(address-less)_ | Local address(es) for the mesh device (comma-separated CIDR, e.g. `10.244.255.254/32`). Gives node/gateway-originated traffic a mesh-routable source so a masqueraded remote-access/edge client can reach other clusters. Set on gateway nodes to a spare, advertised address inside a local pod CIDR, unique per node. |
 | `wgListenPort` | `DataWerx_WG_LISTEN_PORT` | `51820` | UDP listen port. |
 | `wgKeepalive` | `DataWerx_WG_KEEPALIVE` | `25s` | Persistent-keepalive for NAT traversal. |
 

@@ -73,6 +73,10 @@ spec:
             - name: DataWerx_WG_INTERFACE
               value: {{ .Values.wgInterface | quote }}
             {{- end }}
+            {{- if .Values.wgAddress }}
+            - name: DataWerx_WG_ADDRESS
+              value: {{ .Values.wgAddress | quote }}
+            {{- end }}
             {{- if .Values.dataplane }}
             - name: DataWerx_DATAPLANE
               value: {{ .Values.dataplane | quote }}

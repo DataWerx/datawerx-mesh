@@ -22,9 +22,18 @@ clusterID: ""
 # They are used to detect overlap with remote peers (DataWerx_LOCAL_CIDRS).
 localCIDRs: "10.244.0.0/16,10.96.0.0/16"
 
-# Managed WireGuard link name (DataWerx_WG_INTERFACE). An empty 
+# Managed WireGuard link name (DataWerx_WG_INTERFACE). An empty
 # value uses the default dwx-mesh0.
 wgInterface: ""
+
+# Local address(es) to assign to the mesh device (DataWerx_WG_ADDRESS),
+# comma-separated CIDR form, e.g. 10.244.255.254/32. The link is otherwise
+# address-less, which is fine for pod-sourced traffic but leaves node- and
+# gateway-originated traffic (a masqueraded remote-access/edge client) without a
+# mesh-routable source, so it cannot reach other clusters. Set this on gateway
+# nodes to a spare, advertised address inside a local pod CIDR, unique per node.
+# Empty keeps the address-less default.
+wgAddress: ""
 
 # Peer data plane (DataWerx_DATAPLANE).  The default is "wireguard" where DataWerx owns a
 # WireGuard device.  Otherwise "routed" for bring-your-own-overlay which uses an

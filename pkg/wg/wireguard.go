@@ -26,6 +26,7 @@ package wg
 import (
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -61,6 +62,15 @@ type WireGuardManager struct {
 	listenPort int
 	keepalive  time.Duration
 	mtu        int
+
+	// addrs are the local addresses (CIDR form, e.g. "10.244.255.254/32") to
+	// assign to the device in SyncInterface. The mesh link is otherwise
+	// address-less, which is fine for pod-sourced traffic but leaves
+	// node/gateway-originated traffic (e.g. a masqueraded remote client) with no
+	// mesh-routable source. Giving the device a mesh address lets that traffic
+	// egress cross-cluster correctly. Empty keeps the historical address-less
+	// behavior.
+	addrs []string
 
 	// wg is the open WireGuard control client. It is created once and reused;
 	// opening a generic-netlink socket per call would be wasteful in the hot
@@ -106,6 +116,20 @@ func WithMTU(mtu int) Option {
 	return func(m *WireGuardManager) {
 		if mtu > 0 {
 			m.mtu = mtu
+		}
+	}
+}
+
+// WithAddress configures one or more local addresses (in CIDR form, e.g.
+// "10.244.255.254/32") to assign to the mesh device on SyncInterface. Empty or
+// blank entries are ignored, so passing an unset config value is a no-op that
+// keeps the device address-less. Multiple entries support dual-stack.
+func WithAddress(addrs ...string) Option {
+	return func(m *WireGuardManager) {
+		for _, a := range addrs {
+			if a = strings.TrimSpace(a); a != "" {
+				m.addrs = append(m.addrs, a)
+			}
 		}
 	}
 }
@@ -205,8 +229,34 @@ func (m *WireGuardManager) SyncInterface(privateKey string) error {
 		}
 	}
 
-	m.log.Info("interface synchronized", "listenPort", port)
+	// Assign any configured local address(es). The mesh link is otherwise
+	// address-less; a mesh-routable source is what lets node/gateway-originated
+	// traffic (e.g. a masqueraded remote client) egress to remote clusters.
+	// AddrReplace is idempotent, so a resync that re-applies the same address is a
+	// no-op rather than an EEXIST error.
+	for _, a := range m.addrs {
+		addr, perr := parseAddr(a)
+		if perr != nil {
+			return fmt.Errorf("wg: parsing device address %q: %w", a, perr)
+		}
+		if err := netlink.AddrReplace(link, addr); err != nil {
+			return fmt.Errorf("wg: assigning address %s to %q: %w", a, m.ifaceName, err)
+		}
+	}
+
+	m.log.Info("interface synchronized", "listenPort", port, "addrs", m.addrs)
 	return nil
+}
+
+// parseAddr converts a CIDR-form address string into a netlink.Addr. It is the
+// pure half of address assignment, unit-testable without root or a netlink
+// socket.
+func parseAddr(cidr string) (*netlink.Addr, error) {
+	addr, err := netlink.ParseAddr(cidr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid address %q (want CIDR form, e.g. 10.244.255.254/32): %w", cidr, err)
+	}
+	return addr, nil
 }
 
 // ConfigurePeer programs (or updates) a single remote peer and installs host
