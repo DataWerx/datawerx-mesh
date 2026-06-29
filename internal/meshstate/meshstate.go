@@ -1,5 +1,5 @@
 // Package meshstate is the thin Kubernetes-reading shell that every read-only
-// DataWerx surface shares: `dwxctl verify/snapshot/diagnose`, `dwxctl policy
+// DataWerx surface shares: `dwx mesh verify/snapshot/diagnose`, `dwx mesh policy
 // --dry-run`, and the `dwx-mcp` server. It gathers the cluster's observed mesh
 // state through the same client the controllers use and hands it to the pure
 // assembler in pkg/verify, so the snapshot the CLI prints, the health report

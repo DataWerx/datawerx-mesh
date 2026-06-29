@@ -1,4 +1,4 @@
-// Package impact is the pure dry-run/impact analyzer behind `dwxctl policy
+// Package impact is the pure dry-run/impact analyzer behind `dwx mesh policy
 // --dry-run`. Given a proposed change to the mesh's policy or peer set, it
 // reports what the change would expose, what it would conflict with, and what it
 // would break — before anything is applied.

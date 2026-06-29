@@ -6,7 +6,7 @@ import (
 )
 
 // FromSnapshot builds the reachability matrix from a mesh snapshot, so the
-// `dwxctl reach` command and the read-only MCP server compute it from the same
+// `dwx mesh reach` command and the read-only MCP server compute it from the same
 // source of truth as every other read surface. The snapshot already carries the
 // peers (with phase and CIDRs), the topology conflicts, and — since the policy
 // sources were added to the contract — each MeshNetworkPolicy's ingress rules,

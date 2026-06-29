@@ -19,14 +19,14 @@ import (
 
 // runJoin implements the two halves of a zero-friction peering:
 //
-//	dwxctl join export    mint a bundle describing THIS cluster to hand to a peer
-//	dwxctl join import    consume a peer's bundle and author the MeshPeer for it
+//	dwx mesh join export    mint a bundle describing THIS cluster to hand to a peer
+//	dwx mesh join import    consume a peer's bundle and author the MeshPeer for it
 //
 // Run export on each cluster, swap the two tokens, run import on each with the
 // other's token, and the mesh forms with no hand-written CRDs.
 func runJoin(args []string) int {
 	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "usage: dwxctl join <export|import> [flags]")
+		fmt.Fprintln(os.Stderr, "usage: dwx mesh join <export|import> [flags]")
 		return 2
 	}
 	switch args[0] {
@@ -85,13 +85,13 @@ func runJoinExport(args []string) int {
 		return 1
 	}
 
-	fmt.Fprintln(os.Stderr, "# Hand this bundle to the peer cluster and run: dwxctl join import --bundle <token>")
+	fmt.Fprintln(os.Stderr, "# Hand this bundle to the peer cluster and run: dwx mesh join import --bundle <token>")
 	fmt.Println(token)
 	return 0
 }
 
 // runJoinImport consumes a peer's bundle and authors the reciprocal MeshPeer. It
-// is the one mutating dwxctl command; --dry-run prints the object instead of
+// is the one mutating command; --dry-run prints the object instead of
 // applying it. Re-importing the same bundle is an idempotent upsert.
 func runJoinImport(args []string) int {
 	fs := flag.NewFlagSet("join import", flag.ExitOnError)

@@ -6,7 +6,7 @@ description: |
   WireGuard with cross-cluster MCS service discovery, RBAC, CRDs, and
   clusterset.local DNS responder it needs.
 type: application
-version: 0.3.1
+version: 0.4.0
 # appVersion tracks the agent image tag the chart ships by default.
 appVersion: "0.3.1"
 keywords:

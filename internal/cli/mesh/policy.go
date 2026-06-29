@@ -18,7 +18,7 @@ import (
 	"github.com/DataWerx/datawerx-mesh/pkg/topology"
 )
 
-// runPolicy implements `dwxctl policy --dry-run -f <file>`: it loads a proposed
+// runPolicy implements `dwx mesh policy --dry-run -f <file>`: it loads a proposed
 // MeshNetworkPolicy or MeshPeer from a manifest and reports the impact of
 // applying it against the cluster's current state — without applying anything.
 // It is the free safety net for cross-cluster policy: see what a change exposes
@@ -34,7 +34,7 @@ func runPolicy(args []string) int {
 	_ = fs.Parse(args)
 
 	if !*dryRun {
-		fmt.Fprintln(os.Stderr, "error: only --dry-run is supported (dwxctl never applies policy)")
+		fmt.Fprintln(os.Stderr, "error: only --dry-run is supported (this command never applies policy)")
 		return 2
 	}
 	if *file == "" {

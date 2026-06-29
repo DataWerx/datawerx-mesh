@@ -1,3 +1,6 @@
+{{- if and (eq (.Values.role | lower) "gateway") (not .Values.gateway.clientCIDRs) }}
+{{- fail "role=gateway requires gateway.clientCIDRs (the overlay source ranges remote clients connect from). See docs/byo-overlay.md." }}
+{{- end }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -113,6 +116,30 @@ spec:
             {{- if .Values.dnsBind }}
             - name: DataWerx_DNS_BIND
               value: {{ .Values.dnsBind | quote }}
+            {{- end }}
+            {{- if .Values.role }}
+            - name: DataWerx_ROLE
+              value: {{ .Values.role | quote }}
+            {{- end }}
+            {{- if .Values.gateway.clientCIDRs }}
+            - name: DataWerx_GATEWAY_CLIENT_CIDRS
+              value: {{ .Values.gateway.clientCIDRs | quote }}
+            {{- end }}
+            {{- if .Values.gateway.advertiseIPs }}
+            - name: DataWerx_GATEWAY_ADVERTISE_IPS
+              value: {{ .Values.gateway.advertiseIPs | quote }}
+            {{- end }}
+            {{- if .Values.gateway.dnsAddr }}
+            - name: DataWerx_GATEWAY_DNS_ADDR
+              value: {{ .Values.gateway.dnsAddr | quote }}
+            {{- end }}
+            {{- if .Values.gateway.profileNamespace }}
+            - name: DataWerx_GATEWAY_PROFILE_NAMESPACE
+              value: {{ .Values.gateway.profileNamespace | quote }}
+            {{- end }}
+            {{- if .Values.gateway.noNAT }}
+            - name: DataWerx_GATEWAY_NO_NAT
+              value: {{ .Values.gateway.noNAT | quote }}
             {{- end }}
             {{- if .Values.wireguard.privateKey.existingSecret }}
             - name: DataWerx_WG_PRIVATE_KEY

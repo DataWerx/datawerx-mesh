@@ -85,6 +85,36 @@ probe:
 # Listen address of the clusterset.local DNS responder (DataWerx_DNS_BIND).
 dnsBind: ":5353"
 
+# Remote-access gateway role (the free foundation of DataWerx Remote)
+#
+# Setting role to "gateway" (DataWerx_ROLE) makes this agent forward traffic from
+# clients on an overlay you run (Tailscale, NetBird, plain WireGuard) into the
+# mesh, and publishes a client access profile to the dwx-remote-access ConfigMap.
+# Empty keeps the plain node-agent behavior. See docs/byo-overlay.md.
+#
+# A gateway writes the net.ipv4.ip_forward sysctl, which the read-only /proc/sys
+# mount blocks unless the pod is privileged. Set securityContext.privileged=true
+# below, or make sure the gateway nodes already have net.ipv4.ip_forward=1.
+role: ""
+
+gateway:
+  # Overlay source ranges remote clients connect from (DataWerx_GATEWAY_CLIENT_CIDRS),
+  # comma-separated. Required when role is "gateway"; it scopes the masquerade.
+  clientCIDRs: ""
+  # Overlay-reachable addresses of this gateway, advertised to clients in the
+  # access profile (DataWerx_GATEWAY_ADVERTISE_IPS), comma-separated.
+  advertiseIPs: ""
+  # host:port of the clusterset.local DNS responder advertised to clients for
+  # split-DNS (DataWerx_GATEWAY_DNS_ADDR).
+  dnsAddr: ""
+  # Namespace the dwx-remote-access access-profile ConfigMap is published in
+  # (DataWerx_GATEWAY_PROFILE_NAMESPACE). Empty uses datawerx-system.
+  profileNamespace: ""
+  # Disable the client masquerade so pods see the client's real source IP
+  # (DataWerx_GATEWAY_NO_NAT). Requires the premium per-node return-route
+  # component, or client-bound replies black-hole.
+  noNAT: false
+
 # WireGuard private key
 wireguard:
   privateKey:

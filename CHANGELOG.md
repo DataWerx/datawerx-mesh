@@ -12,7 +12,24 @@ called out as such.
 
 ## [Unreleased]
 
-Nothing yet — changes land here after v0.3.1.
+### Added
+
+- **First-class Helm values for the remote-access gateway role.** The chart now
+  exposes `role` and a `gateway.*` block (`clientCIDRs`, `advertiseIPs`,
+  `dnsAddr`, `profileNamespace`, `noNAT`), so enabling the gateway — the free
+  foundation of DataWerx Remote — is a clean `--set role=gateway --set
+  gateway.clientCIDRs=…` instead of hand-editing env. Installing with
+  `role=gateway` and no `gateway.clientCIDRs` now fails at `helm` time with a
+  clear message rather than letting the agent crash-loop. Chart version `0.4.0`.
+
+### Changed
+
+- **README matured around the four capabilities.** Mesh, Remote, Edge, and
+  Signal each get a step-by-step "Try it yourself" runbook against your own
+  clusters, with the free/premium line called out per capability.
+- **CLI help and usage text updated to the unified `dwx` command names**
+  (`dwx mesh …`, `dwx edge …`) in place of the deprecated `dwxctl` / `dwx-mcp`
+  spellings. The legacy aliases still work; only the displayed strings changed.
 
 ## [0.3.1] — 2026-06-25
 

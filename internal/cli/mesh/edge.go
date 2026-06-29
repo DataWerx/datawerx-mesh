@@ -21,16 +21,16 @@ import (
 
 // runEdge implements the edge device connector's authoring + handoff surface:
 //
-//	dwxctl edge enroll    author an EdgeDevice for a device (the tier-agnostic contract)
-//	dwxctl edge profile   render a device's wg-quick config / dwxedge.v1 token to hand off
-//	dwxctl edge list      list enrolled EdgeDevices and their status
+//	dwx edge enroll    author an EdgeDevice for a device (the tier-agnostic contract)
+//	dwx edge profile   render a device's wg-quick config / dwxedge.v1 token to hand off
+//	dwx edge list      list enrolled EdgeDevices and their status
 //
 // `enroll` writes the free EdgeDevice CRD (or prints it with --dry-run). The
 // device only carries traffic once an edge terminator is running — the premium
 // managed connector, or the free BYO-overlay + gateway path (docs/byo-overlay.md).
 func runEdge(args []string) int {
 	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "usage: dwxctl edge <enroll|profile|list> [flags]")
+		fmt.Fprintln(os.Stderr, "usage: dwx edge <enroll|profile|list> [flags]")
 		return 2
 	}
 	switch args[0] {
@@ -129,7 +129,7 @@ func runEdgeEnroll(args []string) int {
 		return 1
 	}
 	fmt.Printf("Enrolled EdgeDevice %q (device %q).\n", dev.Name, *deviceID)
-	fmt.Fprintln(os.Stderr, "# Render the device config with: dwxctl edge profile --device-id "+*deviceID+" --endpoint <host:port> --peer-public-key <terminator-pubkey> --route-cidrs <cidrs>")
+	fmt.Fprintln(os.Stderr, "# Render the device config with: dwx edge profile --device-id "+*deviceID+" --endpoint <host:port> --peer-public-key <terminator-pubkey> --route-cidrs <cidrs>")
 	return 0
 }
 
