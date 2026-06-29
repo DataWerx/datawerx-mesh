@@ -33,17 +33,17 @@ import (
 )
 
 // ProfileVersion is the schema version of an edge enrollment token. It prefixes
-// the token so a consumer rejects a foreign format (e.g. a `dwxctl join` bundle)
+// the token so a consumer rejects a foreign format (e.g. a `dwx mesh join` bundle)
 // instead of decoding garbage. The shape mirrors bootstrap's `dwxmesh.v1` token
 // but the distinct prefix keeps the two enrollment surfaces from cross-decoding.
 const ProfileVersion = "dwxedge.v1"
 
-// ManagedByLabel marks EdgeDevices and the value the free `dwxctl edge` path
+// ManagedByLabel marks EdgeDevices and the value the free `dwx edge` path
 // stamps on them, distinguishing manually-enrolled devices from control-plane-
 // materialized ones for later cleanup/audit.
 const (
 	ManagedByLabel = "app.kubernetes.io/managed-by"
-	// ManagedByEdge is the value ManagedByLabel carries on `dwxctl edge`-authored
+	// ManagedByEdge is the value ManagedByLabel carries on `dwx edge`-authored
 	// EdgeDevices, mirroring bootstrap.ManagedByJoin.
 	ManagedByEdge = "dwxctl-edge"
 )

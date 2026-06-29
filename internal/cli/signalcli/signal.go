@@ -10,7 +10,7 @@
 // structured root-cause answer whose everyclaim cites the signal it came from.
 // The model selects and explains; the facts are produced by the deterministic
 // engines, so an answer can never drift from what
-// `dwxctl snapshot/diagnose/reach/slo` and `dwx-mcp` already report.
+// `dwx mesh snapshot/diagnose/reach/slo` and `dwx-mcp` already report.
 //
 // Two modes:
 //
@@ -18,7 +18,7 @@
 //	dwx-signal "Which clusters are unhealthy?"            # live cluster
 //	dwx-signal --print-context --snapshot snap.json "..." # no model call
 //
-// The evidence can come from a file based on `dwxctl snapshot` / `dwx-mcp`
+// The evidence can come from a file based on `dwx mesh snapshot` / `dwx-mcp`
 // output so the tool runs with no cluster, or live from the API. `--print-context`
 // shows the exact grounded evidence the model would receive — useful for trust,
 // debugging, and demos — and needs no API key.
@@ -55,7 +55,7 @@ func Run(prog string, args []string, stdout, stderr io.Writer) error {
 	fs := flag.NewFlagSet(prog, flag.ContinueOnError)
 	fs.SetOutput(stderr)
 
-	snapshotPath := fs.String("snapshot", "", "read evidence from a snapshot JSON file (from `dwxctl snapshot` / `dwx-mcp`) instead of the live cluster; use - for stdin")
+	snapshotPath := fs.String("snapshot", "", "read evidence from a snapshot JSON file (from `dwx mesh snapshot` / `dwx-mcp`) instead of the live cluster; use - for stdin")
 	printContext := fs.Bool("print-context", false, "print the grounded evidence that would be sent to the model, then exit (no API key needed)")
 	asJSON := fs.Bool("json", false, "print the answer as JSON instead of formatted text")
 	model := fs.String("model", signal.DefaultModel, "Claude model to reason with")

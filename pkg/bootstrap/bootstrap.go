@@ -1,4 +1,4 @@
-// Package bootstrap is the pure planner behind `dwxctl join`. It turns the
+// Package bootstrap is the pure planner behind `dwx mesh join`. It turns the
 // hand-authored "write a MeshPeer and swap WireGuard keys" routine into a single
 // exchangeable bundle. One cluster mints a bundle describing itself; the other
 // consumes it and authors the reciprocal MeshPeer. Doing it twice - once each
@@ -33,7 +33,7 @@ const (
 	// garbage.
 	BundleVersion = "dwxmesh.v1"
 
-	// ManagedByLabel marks MeshPeers authored by `dwxctl join`, distinguishing
+	// ManagedByLabel marks MeshPeers authored by `dwx mesh join`, distinguishing
 	// them from GitOps- or syncer-authored peers for later cleanup/audit.
 	ManagedByLabel = "app.kubernetes.io/managed-by"
 	// ManagedByJoin is the value ManagedByLabel carries on join-authored peers.
@@ -172,7 +172,7 @@ func (b Bundle) PeerSpec() networkingv1alpha1.MeshPeerSpec {
 // PeerObject builds the full MeshPeer object to apply for a remote cluster,
 // naming it deterministically from the cluster ID. Re-importing the same
 // bundle is an idempotent upsert, and tagging it as join-authored. The TypeMeta
-// is set so the object rendered by `dwxctl join import --dry-run` is a valid,
+// is set so the object rendered by `dwx mesh join import --dry-run` is a valid,
 // self-describing manifest a user can pipe straight into `kubectl apply -f -`.
 func (b Bundle) PeerObject() *networkingv1alpha1.MeshPeer {
 	return &networkingv1alpha1.MeshPeer{

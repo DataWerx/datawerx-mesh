@@ -12,7 +12,7 @@ import (
 // runGraph renders the mesh dependency graph: this cluster, the clusters it
 // peers with, and the services that flow between them. It is read-only and built
 // from the same snapshot every other read command uses, so the graph can never
-// disagree with `dwxctl snapshot`. The default JSON output is the stable
+// disagree with `dwx mesh snapshot`. The default JSON output is the stable
 // artifact; dot and mermaid are renderings for `dot -Tsvg` and inline docs.
 func runGraph(args []string) int {
 	fs := flag.NewFlagSet("graph", flag.ExitOnError)

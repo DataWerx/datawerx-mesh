@@ -1,6 +1,6 @@
-// Package verify contains the pure logic behind `dwxctl verify`: given a
+// Package verify contains the pure logic behind `dwx mesh verify`: given a
 // read-only snapshot of a cluster's DataWerx state, it produces a health Report.
-// The CLI (cmd/dwxctl) fetches the snapshot via the Kubernetes API and hands it
+// The CLI (cmd/dwx) fetches the snapshot via the Kubernetes API and hands it
 // here, so all the decision logic is unit-testable without a cluster.
 package verify
 
@@ -53,7 +53,7 @@ func (s Status) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText parses the symbolic name back into a Status, so a snapshot
-// emitted by `dwxctl snapshot` / `dwx-mcp` round-trips into verify.Snapshot. The
+// emitted by `dwx mesh snapshot` / `dwx-mcp` round-trips into verify.Snapshot. The
 // contract is meant to be re-ingested by a higher layer (e.g. dwx-signal), so
 // the text form MarshalText writes must read back symmetrically. An unknown name
 // is an error rather than a silent StatusPass, so corrupt input never masquerades

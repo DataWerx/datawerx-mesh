@@ -6,7 +6,7 @@ import (
 )
 
 // The mesh snapshot is the machine-readable record of a mesh's observed state.
-// It is a strict superset of the `dwxctl verify` health report. The same checks
+// It is a strict superset of the `dwx mesh verify` health report. The same checks
 // plus the structured objects behind them: peers, conflicts, exports, imports,
 // policies, recent events, metric pointers. It exists for two reasons that
 // happen to want the same artifact — observability hook an operator can
@@ -39,7 +39,7 @@ type Snapshot struct {
 	// from SnapshotInputs.Now. Zero when the caller supplied no clock (tests).
 	GeneratedAt int64 `json:"generatedAt,omitempty"`
 
-	// Health is the same report `dwxctl verify` renders, embedded so a snapshot
+	// Health is the same report `dwx mesh verify` renders, embedded so a snapshot
 	// is a strict superset and a consumer never needs both.
 	Health Report `json:"health"`
 
@@ -195,7 +195,7 @@ type SnapshotInputs struct {
 
 // BuildSnapshot assembles a deterministic Snapshot from gathered state. It
 // derives the embedded health Report from the same inputs, so the snapshot and
-// `dwxctl verify` never disagree, computes per-peer handshake age, truncates
+// `dwx mesh verify` never disagree, computes per-peer handshake age, truncates
 // key material, and sorts every collection for stable output.
 func BuildSnapshot(in SnapshotInputs) Snapshot {
 	snap := Snapshot{

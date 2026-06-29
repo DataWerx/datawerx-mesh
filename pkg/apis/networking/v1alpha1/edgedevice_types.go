@@ -5,7 +5,7 @@ import (
 )
 
 // EdgeDevicePhase enumerates the lifecycle states an edge device connection can
-// occupy. It mirrors MeshPeerPhase so the read surfaces (snapshot, dwxctl) treat
+// occupy. It mirrors MeshPeerPhase so the read surfaces (snapshot, dwx) treat
 // device liveness with the same vocabulary they already use for cluster peers.
 type EdgeDevicePhase string
 
@@ -34,7 +34,7 @@ const (
 // Services, and never appears in the cluster topology graph. It is a client whose
 // reachable set is bounded by the terminator's AllowedIPs ACL plus the gateway
 // masquerade scope. The CRD is the tier-agnostic integration point — authored by
-// the free `dwxctl edge` path or materialized by the premium control plane — and
+// the free `dwx edge` path or materialized by the premium control plane — and
 // the reconciler programming it never branches on who wrote it.
 type EdgeDeviceSpec struct {
 	// DeviceID is the stable, human-facing identity of the device. It is the

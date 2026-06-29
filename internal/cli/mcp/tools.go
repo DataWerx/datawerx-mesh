@@ -20,7 +20,7 @@ type tool struct {
 }
 
 // tools is the read-only tool set. Every tool reads from the snapshot, so they
-// share one source of truth with `dwxctl snapshot` and can never drift from it.
+// share one source of truth with `dwx mesh snapshot` and can never drift from it.
 var tools = map[string]tool{
 	"mesh_snapshot": {
 		description: "Returns the full versioned mesh state snapshot as JSON (peers, conflicts, service exports/imports, policies, health, recent events).",

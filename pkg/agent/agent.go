@@ -633,7 +633,7 @@ func registerServers(mgr ctrl.Manager, topoSyncer *syncer.Syncer) error {
 // the control-plane client actually supporting evidence push.  The open-core,
 // self-hosted tier wires nothing and the reconcile loop is untouched. Snapshot
 // gathering uses a dedicated read-only client (not the manager cache) exactly as
-// the other read surfaces (dwxctl/dwx-mcp) do.
+// the other read surfaces (dwx/dwx-mcp) do.
 func registerEvidenceReporter(mgr ctrl.Manager, cpClient dwxclient.ControlPlaneClient, premium bool) error {
 	if !premium {
 		return nil
