@@ -90,6 +90,54 @@ func TestStaleRoutes(t *testing.T) {
 	}
 }
 
+func TestWithAddress(t *testing.T) {
+	m := &WireGuardManager{}
+
+	// Empty and blank entries are ignored so an unset config value is a no-op.
+	WithAddress("")(m)
+	WithAddress("   ")(m)
+	if len(m.addrs) != 0 {
+		t.Fatalf("blank addresses should be ignored, got %v", m.addrs)
+	}
+
+	// Real entries are trimmed and appended; multiple calls accumulate.
+	WithAddress(" 10.244.255.254/32 ")(m)
+	WithAddress("fd00::1/128", "")(m)
+	want := []string{"10.244.255.254/32", "fd00::1/128"}
+	if len(m.addrs) != len(want) {
+		t.Fatalf("addrs = %v, want %v", m.addrs, want)
+	}
+	for i := range want {
+		if m.addrs[i] != want[i] {
+			t.Errorf("addrs[%d] = %q, want %q", i, m.addrs[i], want[i])
+		}
+	}
+}
+
+func TestParseAddr(t *testing.T) {
+	t.Run("valid /32", func(t *testing.T) {
+		addr, err := parseAddr("10.244.255.254/32")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := addr.IPNet.String(); got != "10.244.255.254/32" {
+			t.Errorf("parsed = %s, want 10.244.255.254/32", got)
+		}
+	})
+
+	t.Run("bare IP without mask errors", func(t *testing.T) {
+		if _, err := parseAddr("10.244.255.254"); err == nil {
+			t.Fatal("expected error for a non-CIDR address")
+		}
+	})
+
+	t.Run("garbage errors", func(t *testing.T) {
+		if _, err := parseAddr("not-an-address"); err == nil {
+			t.Fatal("expected error for malformed address")
+		}
+	})
+}
+
 func TestShortKey(t *testing.T) {
 	tests := []struct {
 		in   string

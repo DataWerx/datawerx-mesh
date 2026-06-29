@@ -77,6 +77,16 @@ const (
 	// envInterface overrides the managed link name (default dwx-mesh0).
 	envInterface = "DataWerx_WG_INTERFACE"
 
+	// envWGAddress assigns one or more local addresses (comma-separated CIDR
+	// form, e.g. "10.244.255.254/32") to the mesh device. The link is otherwise
+	// address-less, which is fine for pod-sourced traffic but leaves
+	// node/gateway-originated traffic (a masqueraded remote client) without a
+	// mesh-routable source, so it cannot reach other clusters. Set this to a
+	// spare, advertised address inside one of this cluster's pod CIDRs (and
+	// unique per node) to let the gateway role reach cross-cluster services.
+	// Unset keeps the historical address-less behavior.
+	envWGAddress = "DataWerx_WG_ADDRESS"
+
 	// envDataPlane selects the peer data plane: "wireguard" (default — DataWerx
 	// owns a WireGuard device) or "routed" (bring-your-own-overlay: an existing
 	// overlay provides connectivity and DataWerx only programs host routes).
@@ -847,6 +857,7 @@ func selectPeerDataPlane() (controllers.PeerDataPlane, string, string, func() er
 			wg.WithListenPort(intEnv(envWGListenPort)),
 			wg.WithKeepalive(durationEnv(envWGKeepalive)),
 			wg.WithMTU(intEnv(envWGMTU)),
+			wg.WithAddress(splitCSV(os.Getenv(envWGAddress))...),
 		)
 		if err != nil {
 			return nil, "", "", nil, fmt.Errorf("initializing wireguard manager: %w", err)
