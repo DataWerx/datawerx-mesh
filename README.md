@@ -106,25 +106,26 @@ DataWerx **speaks** the standard MCS API so you avoid lock-in, but the plumbing 
 
 ## Quickstart: link two clusters in 5 minutes
 
-See it work for yourself. This scripted demo creates and links **two clusters** and calls a Service across them, all on one laptop with [kind](https://kind.sigs.k8s.io). The steps map 1:1 onto your real-world clusters.
+See it work for yourself. One script creates and links **two clusters** with [kind](https://kind.sigs.k8s.io), calls a Service across them by name, and gives you a tour of the read-only CLI — all on one machine, all open-core. The steps map 1:1 onto your real-world clusters.
 
-**Prereqs:** Docker, `kind`, `kubectl`, `helm`, `wg` (wireguard-tools), and the WireGuard kernel module (`sudo modprobe wireguard`).
+**Prereqs:** Docker, `kind`, `kubectl`, `helm`, `go`, `wg` (wireguard-tools), `jq`, `curl`. The default WireGuard data plane needs the WireGuard kernel module (`sudo modprobe wireguard`). No module? Add `--routed` to ride the shared kind network instead — the mesh contract you watch is identical.
 
 ```sh
 git clone https://github.com/DataWerx/datawerx-mesh && cd datawerx-mesh
 
-go build -o dwx ./cmd/dwx          # the unified DataWerx CLI; put it on your PATH
+examples/local/mesh-demo.sh check     # confirm your machine is ready
+examples/local/mesh-demo.sh all       # clusters → agent → mesh → service call → tour → policy
 
-hack/e2e/kind-up.sh                # two kind clusters + agent + reciprocal peering
-dwx mesh verify --context kind-dwx-a   # → Mesh peers: 1 connected
-
-hack/demo/quickstart.sh            # export an echo Service in A, call it by name from B
-# → hi-from-a   ← the Service in cluster A, reached by name from cluster B
-
-hack/e2e/kind-down.sh              # clean up
+examples/local/mesh-demo.sh down      # clean up
 ```
 
-That's a working two-cluster mesh with a service called across it. The **[full quickstart](docs/quickstart.md)** does the same thing by hand so you understand every piece.
+The `all` run ends by calling an echo Service in cluster A **by name** from cluster B:
+
+```
+✅ Cross-cluster call worked: a Service in dwx-a, reached by name from dwx-b.
+```
+
+Want to go step by step, or read exactly what each piece does? See **[examples/local/](examples/local/)** — it has a `check`/`up`/`service`/`tour`/`policy`/`down` command for each stage. The **[by-hand quickstart](docs/quickstart.md)** walks the same path with no script so you understand every object.
 
 > `dwx` is the unified CLI (the old `dwxctl` / `dwx-mcp` / `dwx-signal` names still work as aliases). Build it with `go build -o dwx ./cmd/dwx`, or install a release binary — see **[docs/install.md](docs/install.md)**.
 
@@ -136,7 +137,7 @@ Build the CLI once and keep the demo mesh from the quickstart running:
 
 ```sh
 go build -o dwx ./cmd/dwx
-hack/e2e/kind-up.sh        # if it isn't already up
+examples/local/mesh-demo.sh up        # if it isn't already up
 ```
 
 ### 1 · Mesh — a Service called across clusters
@@ -145,12 +146,12 @@ This is the quickstart above, broken into the pieces you'll reproduce in product
 
 ```sh
 # Stand up the two-cluster mesh and confirm the peering converged.
-hack/e2e/kind-up.sh
+examples/local/mesh-demo.sh up
 dwx mesh verify --context kind-dwx-a            # → Mesh peers: 1 connected
 dwx mesh verify --context kind-dwx-b            # → Mesh peers: 1 connected
 
 # Export an echo Service in cluster A and call it by name from cluster B.
-hack/demo/quickstart.sh                         # → hi-from-a
+examples/local/mesh-demo.sh service             # → hello from cluster A
 
 # Inspect what each cluster sees.
 dwx mesh snapshot --context kind-dwx-a | jq '.imports, .exports'
@@ -215,7 +216,7 @@ helm upgrade dwx oci://ghcr.io/datawerx/datawerx-mesh/charts/datawerx-mesh \
   --set securityContext.privileged=true
 ```
 
-The demo mesh in this lab is installed straight from manifests rather than Helm, so toggle the same env on its running agent:
+The demo mesh in this lab is a Helm release named `dwx`, so you can flip the same settings with `helm upgrade dwx charts/datawerx-mesh --reuse-values --set role=gateway ...`. For a quick, revertible toggle you can also set the env directly on the running agent (the DaemonSet is named `dwx-mesh-agent`):
 
 ```sh
 kubectl --context kind-dwx-a -n datawerx-system set env daemonset/dwx-mesh-agent \
@@ -265,7 +266,7 @@ dwx edge profile --context kind-dwx-a \
 
 A device only **carries traffic** once an edge terminator is running. The free path to that is the **BYO-overlay + gateway** combination above. **Premium (DataWerx Edge)** provides the managed terminator that programs each device as a roaming `/32` peer, plus fleet enrollment and lifecycle — so `dwx edge profile` needs no manual `--address`. Design: **[docs/design/0013-edge-device-connector.md](docs/design/0013-edge-device-connector.md)**.
 
-When you're done, tear the lab down with `hack/e2e/kind-down.sh`.
+When you're done, tear the lab down with `examples/local/mesh-demo.sh down`.
 
 ## Install on your own clusters
 

@@ -1,0 +1,20 @@
+# A cross-cluster ingress policy for the demo, applied in cluster A.
+#
+# It protects cluster A's pod range and permits mesh ingress to the echo port
+# only from cluster B. Because a MeshNetworkPolicy now selects that destination,
+# every OTHER cross-cluster source to the same range becomes default-deny — the
+# same semantics as a Kubernetes NetworkPolicy, extended across the mesh.
+apiVersion: networking.datawerx.io/v1alpha1
+kind: MeshNetworkPolicy
+metadata:
+  name: allow-cluster-b-to-echo
+spec:
+  destinations:
+    - 10.244.0.0/16
+  ingress:
+    - from:
+        - clusterIDs:
+            - cluster-b
+      ports:
+        - protocol: TCP
+          port: 8080
