@@ -376,3 +376,8 @@ FodyWeavers.xsd
 !/internal/apicheck/
 premium-tier-build-prompt.md
 *.internal.md
+
+# Generated local-demo state: the built dwx binary plus per-run WireGuard
+# keypairs. These are runtime output, and the .key files are private keys —
+# never commit them.
+examples/local/.state/

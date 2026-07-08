@@ -26,10 +26,11 @@ explanation in a concrete reachability verdict instead of inferring one.
 This is **expected** reachability, derived from declared state: peer phase,
 topology conflicts, and the compiled `MeshNetworkPolicy` set. It does not send a
 packet. The complementary **observed** reachability — active synthetic probes
-recorded back onto status (0004 §4 #2) — is the roadmapped runtime counterpart;
-the two are designed to be compared, and the expected matrix is what makes a
-probe result interpretable (*"the probe failed, and policy says it should have
-succeeded → a data-plane bug, not a policy one"*).
+recorded back onto status (0004 §4 #2) — has since landed as the runtime
+counterpart (design 0012, `pkg/probe`); the two are designed to be compared, and
+the expected matrix is what makes a probe result interpretable (*"the probe
+failed, and policy says it should have succeeded → a data-plane bug, not a policy
+one"*).
 
 ## What it computes
 
@@ -92,7 +93,8 @@ reasons over it across the fleet and time.
 
 ## Scope / non-goals
 
-- **Observed reachability** (active probes) — the runtime counterpart, roadmapped.
+- **Observed reachability** (active probes) — the runtime counterpart, delivered
+  in design 0012 (`pkg/probe`); `pkg/slo` reconciles it against this matrix.
 - **Egress / cross-peer pairs** — the matrix is ingress-into-this-cluster, which
   is what `MeshNetworkPolicy` governs and what a local snapshot can answer
   authoritatively. A fleet-wide all-pairs matrix is a hosted concern (it needs

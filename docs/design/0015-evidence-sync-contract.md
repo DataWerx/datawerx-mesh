@@ -1,8 +1,10 @@
 # Design 0015 — `/api/v1/evidence` (agent → control-plane evidence sync)
 
-- Status: **Proposed.** Server endpoint + persistence in `datawerx-admin`
-  (`internal/signal`, `internal/store`, `migrations/0009`, `POST /api/v1/evidence`);
-  the premium-agent client in `datawerx-mesh` is not yet implemented.
+- Status: **Implemented.** Server endpoint + persistence + aggregation in
+  `datawerx-admin` (`internal/signal`, `internal/store`, `migrations/0009`,
+  `POST /api/v1/evidence`), and the premium-agent producer in `datawerx-mesh`:
+  `pkg/evidence` (the `Reporter` Runnable), `EnterpriseControlPlaneClient.PushEvidence`,
+  and the agent wiring in `pkg/agent` (`registerEvidenceReporter`, premium-only).
 - Builds on: the "DataWerx Signal" seam (0014), the FIXED open-core agent contract
   (`datawerx-admin/internal/agentapi`), and the grounded evidence the open-core
   CLI assembles (`pkg/signal.Evidence`, 0005).
@@ -67,9 +69,11 @@ layer like every other store resource.
 - `Fleet.Digest` is a stable fingerprint (order-independent), so a poller or UI
   short-circuits when nothing changed which is the same pattern as `topology.Revision`.
 
-The human/UI **fleet read surface** (`/api/v1/admin/...`, RBAC-gated) is the next
-step.  It lists stored evidence, runs `ParseReport`+`Aggregate`, and serves the
-`Fleet`. Managed inference (fleet Q&A) and governed actions layer.
+The human/UI **fleet read surface** (`/api/v1/admin/...`, RBAC-gated) has landed
+in `datawerx-admin/internal/adminapi` (`fleet_handlers.go`): it lists stored
+evidence, runs `ParseReport`+`Aggregate`, and serves the `Fleet`. Managed
+inference (fleet Q&A via `internal/signal/ask.go`, exposed by `signal_handlers.go`)
+layers on top of it; governed actions remain the next step.
 
 ## Contract discipline
 

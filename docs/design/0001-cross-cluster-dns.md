@@ -1,8 +1,18 @@
 # Design 0001 — Cross-cluster DNS via the MCS API
 
-- Status: **Draft**
+- Status: **Implemented.**
 - Milestone: **M1**
 - Tracking: see `ROADMAP.md`
+
+> **Implementation status.** The whole export → aggregate → import → DNS pipeline
+> is finished. The MCS API types (`pkg/apis/multicluster/v1alpha1`), the pure
+> aggregation and broker-less allocation (`pkg/dns`), the export/import/NAT
+> controllers (`pkg/controllers`), the `EndpointExport` wire CRD in
+> `networking.datawerx.io`, and the `clusterset.local` DNS responder
+> (`pkg/dnsserver`) are all implemented and unit-tested. A two-cluster kind e2e
+> resolves and reaches an exported service by its `clusterset.local` name over
+> the full export → mirror → import → DNS → connect path
+> (`test/e2e/e2e_test.go`). What follows describes the design as shipped.
 
 ## Summary
 
@@ -80,30 +90,32 @@ plane already routes those IPs across the mesh.
 ### Components
 
 1. **API types** (`pkg/apis/multicluster/v1alpha1`) — `ServiceExport`,
-   `ServiceImport` (+ scheme + hand-written deepcopy). **Drafted in this PR.**
+   `ServiceImport` (+ scheme + hand-written deepcopy). Implemented.
 
 2. **Pure aggregation logic** (`pkg/dns`) — `PlanServiceImport()` merges the
    per-cluster `ExportedEndpoint`s for one `<name, namespace>` into a single
    desired `ServiceImport` (resolved type, merged ports, per-cluster IPs) and
    reports MCS **conflicts** (type mismatch, port disagreement). Side-effect
-   free, table-tested — same pattern as `topology.PlanPeer`. **Drafted in this
-   PR** (`naming.go` + tests).
+   free, table-tested — same pattern as `topology.PlanPeer`. Implemented in
+   `naming.go` alongside `aggregate.go` and `allocate.go`.
 
-3. **Export controller** (`pkg/controllers`, next PR) — watches `ServiceExport`
-   + the referenced `Service`; computes that cluster's `ExportedEndpoint` and
-   publishes it through the **same `ControlPlaneClient` seam** used for peers
-   (local CRDs in free, SaaS in premium). Sets `ServiceExport` status
-   conditions (`Valid`, `Conflict`).
+3. **Export controller** (`pkg/controllers/serviceexport_controller.go`) —
+   watches `ServiceExport` + the referenced `Service`; computes that cluster's
+   `ExportedEndpoint` and publishes it through the **same `ControlPlaneClient`
+   seam** used for peers (local CRDs in free, SaaS in premium). Sets
+   `ServiceExport` status conditions (`Valid`, `Conflict`).
 
-4. **Import controller** (`pkg/controllers`, next PR) — for each exported
-   `<name, namespace>` visible across the mesh, calls `dns.PlanServiceImport`
-   and reconciles a local `ServiceImport` (cluster-local). Idempotent; cleans
-   up when the last export disappears.
+4. **Import controller** (`pkg/controllers/serviceimport_controller.go`) — for
+   each exported `<name, namespace>` visible across the mesh, calls
+   `dns.PlanServiceImport` and reconciles a local `ServiceImport`
+   (cluster-local). Idempotent; cleans up when the last export disappears. The
+   companion `servicenat_controller.go` programs the ClusterSetIP DNAT.
 
-5. **DNS integration** (next PR) — a CoreDNS plugin (or generated zone) that
-   answers the `clusterset.local` zone from `ServiceImport` objects. Start with
-   a CoreDNS configuration + a lightweight resolver backed by the informer
-   cache; a native plugin can follow.
+5. **DNS integration** (`pkg/dnsserver`) — a lightweight resolver that answers
+   the `clusterset.local` zone from `ServiceImport` objects, backed by the
+   informer cache and run as a controller-runtime Runnable on every agent pod.
+   Cluster CoreDNS forwards the zone to it (`hack/e2e/patch-coredns.sh` shows
+   the config); a native CoreDNS plugin can still follow.
 
 ### The `EndpointExport` wire format (tier-agnostic integration point)
 
@@ -140,8 +152,8 @@ imported service, carved from a dedicated mesh range (default `241.0.0.0/8`,
 configurable) that does not collide with cluster pod/service CIDRs. Allocation
 is deterministic and conflict-checked; the address is programmed into the data
 plane like any other remote CIDR. (Headless Services skip this and resolve to
-the union of pod IPs.) Detailed allocator design is deferred to the import
-controller PR; the API and aggregation already carry `Type` and `IPs`.
+the union of pod IPs.) The allocator is `dns.AllocateClusterSetIPs` — the pure,
+broker-less function described above.
 
 ## Conflict handling (per MCS)
 
@@ -161,9 +173,10 @@ the controllers only perform side effects.
 ## Testing
 
 - `pkg/dns` — table-driven unit tests for naming and aggregation/conflicts
-  (no K8s), 100% target, mirroring `pkg/topology`.
-- Controllers — envtest + fake `ControlPlaneClient` (M2).
-- e2e — exported service reachable by name across two `kind` clusters (M2).
+  (no K8s), mirroring `pkg/topology`, plus fuzzers for the codecs.
+- Controllers — `controller-runtime` fake client + fake `ControlPlaneClient`.
+- e2e — an exported service is reachable by its `clusterset.local` name across
+  two `kind` clusters (`test/e2e/e2e_test.go`, both headless and ClusterSetIP).
 
 ## Out of scope (tracked separately)
 

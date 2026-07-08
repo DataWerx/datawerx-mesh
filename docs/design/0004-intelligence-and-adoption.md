@@ -1,11 +1,16 @@
 # 0004 — Intelligence & Adoption Strategy (handoff brief)
 
-> Status: **strategy / not yet scheduled.** This is a forward-looking brief, not
-> a shipped design. It captures the "nice project → essential service" thesis and
-> the AI layer that stacks on top, expressed in this repo's existing open-core
-> free-hook / paid-seam discipline (see `ROADMAP.md`, `ARCHITECTURE.md`,
-> `COMMITMENT.md`). Companion design docs (`0005+`) should be spun out per item
-> as work is scheduled.
+> Status: **strategy — the free-tier execution sequence has shipped.** This began
+> as a forward-looking brief; the OSS half of §3's sequence is now built and has
+> its own design docs. §3.1 mesh snapshot + rule-based diagnosis → 0005; §3.2
+> zero-friction join → 0006; §3.3 read-only MCP server → 0007; §3.5 dry-run/impact
+> planner → 0008; and the §4/§5 free hooks grew into the dependency graph (0009),
+> reachability matrix (0010), connectivity golden signals (0011), and active
+> probing (0012). The DataWerx Signal grounded-AI layer (§3.4/§5) is designed in
+> 0014/0015 with its OSS half landed. What remains forward-looking is the
+> **hosted premium plane** that consumes these contracts fleet-wide — that lives
+> in `datawerx-admin`, not here. Keep §1–§2 as the durable thesis and guardrails;
+> read the numbered designs for what actually shipped.
 
 ---
 
@@ -36,15 +41,13 @@ the items below. Before writing code:
 
 ---
 
-## 1. Strategic framing (the "why" — do not lose this)
+## 1. Strategic framing
 
-**The gap between "nice project" and "essential service" is not more L3.**
 Submariner, Cilium ClusterMesh, and Tailscale already own "connect the
 clusters" and are better funded. Competing on connectivity features keeps
-DataWerx a nice project. You become *essential* by owning a **job that is
-painful, recurring, and currently unowned**, and by raising switching cost.
+DataWerx a 'cute project.' 
 
-Two levers, and everything in this brief serves one of them:
+Two angles, and everything in this brief serves one of them:
 
 - **Lever A — collapse time-to-value** (the adoption flywheel). Today, free
   onboarding means hand-authoring `MeshPeer` CRDs and exchanging WireGuard keys
@@ -253,7 +256,7 @@ snapshot/flow data (§1 keystone), never to generic chat. Seam discipline per §
 
 ---
 
-## 6. Risks / anti-patterns (hold the line)
+## 6. Risks / anti-patterns
 
 - **Don't AI-wash.** Must consume the cross-cluster graph, or it's clonable.
 - **Keep the OSS binary model-free.** Free hook = data contract, not inference.
@@ -267,21 +270,24 @@ snapshot/flow data (§1 keystone), never to generic chat. Seam discipline per §
 
 ---
 
-## 7. Concrete repo artifacts to produce next
+## 7. Concrete repo artifacts
 
-When scheduling work, spin these out (matching the existing conventions):
+Items 1–3 below have been produced and implemented; they are kept here as the
+record of what §7 called for. Items 4–5 track the remaining work.
 
-1. `docs/design/0005-mesh-snapshot.md` — the `MeshSnapshot` schema (versioned),
-   `pkg/verify` assembly, `dwxctl` surface, stability guarantee.
-2. `docs/design/0006-zero-friction-join.md` — bundle/handshake format, pure
-   planner, `dwxctl join`, e2e adoption.
-3. `docs/design/0007-mesh-mcp-server.md` — read-only tool set, free/act split,
-   `cmd/dwx-mcp`.
+1. ✅ `docs/design/0005-mesh-snapshot.md` — the `MeshSnapshot` schema (versioned),
+   `pkg/verify` assembly, CLI surface, stability guarantee.
+2. ✅ `docs/design/0006-zero-friction-join.md` — bundle/handshake format, pure
+   planner, `dwx mesh join`, e2e adoption.
+3. ✅ `docs/design/0007-mesh-mcp-server.md` — read-only tool set, free/act split,
+   `cmd/dwx-mcp` (now `dwx mcp`).
 4. A **ROADMAP.md "M5 — Intelligence & adoption"** section, written in the same
    free-hook/paid-seam table style as the existing free/paid line, referencing
    this brief.
-5. Premium-side (private repo) design for the hosted diagnosis agent and the act
-   MCP — consuming the contracts above over `EnterpriseControlPlaneClient`.
+5. Premium-side (`datawerx-admin`) design for the hosted diagnosis/Signal service
+   and the act MCP — consuming the contracts above over
+   `EnterpriseControlPlaneClient`. The evidence-sync foundation for this landed
+   in design 0015.
 
 ---
 

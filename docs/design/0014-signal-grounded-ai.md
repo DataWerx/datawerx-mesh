@@ -1,15 +1,19 @@
 # Design 0014 — DataWerx Signal (grounded AI over the mesh)
 
-- Open-core PoC landed (`pkg/signal`, `cmd/dwx-signal`);
-  the premium control-plane service is not started.
+- Status: **Implemented.** The OSS half landed (`pkg/signal`, `dwx signal`), and
+  the premium managed service in `datawerx-admin` is substantially built too:
+  evidence sync + persistence + aggregation (design 0015), managed inference
+  (`internal/signal/ask.go`), intent translation (`translate.go`), and the
+  RBAC-gated fleet + Q&A read surfaces (`internal/adminapi`). Governed writes
+  (apply / create-export / failover, write MCP tools) remain the next step.
 - Implemented by `pkg/signal` (the grounded-evidence
-  assembly) and the `dwx-signal` CLI, mirroring the control plane's
+  assembly) and the `dwx signal` CLI, mirroring the control plane's
   `internal/signal`. Nothing in the module imports `os/signal`, so the package
   name is unambiguous; `pkg/slo.Signal` is a distinct, qualified type.
 - Packages: `pkg/signal` is a pure, OSS, grounding contract, `cmd/dwx-signal`
-  (read-only CLI, OSS), and the **premium** managed AI-ops service in
-  `datawerx-admin` (control-plane-side; not yet built).
-- Read-only MCP server - the intent/impact dry-run planner,
+  (the read-only `dwx signal` CLI, OSS), and the **premium** managed AI-ops
+  service in `datawerx-admin` (control-plane-side).
+- Read-only over the MCP server, the intent/impact dry-run planner,
   reachability, and the connectivity golden signals.
 
 ## Summary

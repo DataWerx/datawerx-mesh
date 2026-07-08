@@ -1,6 +1,6 @@
 # Design 0012 — Active synthetic probing
 
-- Status: **Implemented (runtime; live path e2e-validated).**
+- Status: **Implemented (runtime; cross-cluster e2e roadmapped).**
 - Milestone: **M5 (Intelligence & adoption).**
 - Package: `pkg/probe` (pure core + thin runtime shell), wired in
   `cmd/manager/main.go` behind `DataWerx_PROBE_ENABLE`.
@@ -56,8 +56,10 @@ no network:
 The runtime shell — `Responder` (an HTTP `manager.Runnable`) and `Prober` (a
 `manager.Runnable` that dials on a ticker) — performs only the I/O. The `Prober`
 takes a `ProbeFunc` and a `PeerLister` seam, so its loop is unit-tested with
-fakes; the live cross-cluster dial is exercised by the kind e2e, which is the
-honest boundary for a feature that fundamentally needs two clusters and a kernel.
+fakes, and a loopback `Responder` ⇄ `httpProbe` round-trip covers the real HTTP
+path. The true cross-cluster dial is left to the kind e2e, which is the honest
+boundary for a feature that fundamentally needs two clusters and a kernel — and
+that e2e is still roadmapped (see Testing).
 
 ## Surface and configuration
 
