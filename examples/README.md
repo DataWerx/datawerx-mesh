@@ -3,6 +3,9 @@
 Drop-in starting points for adopting DataWerx Mesh in a real platform. Copy what
 you need into your own repos and adjust for your environment.
 
+- **[local/](local/)** — a one-command, two-cluster mesh on your own machine with
+  kind. Creates both clusters, installs the agent with Helm, forms the mesh,
+  calls a Service across it by name, and tours the read-only CLI. Start here.
 - **[terraform/](terraform/)** — a Terraform module that installs the agent from
   the signed OCI Helm chart, parameterized by cluster ID and WireGuard key.
 - **[backstage/](backstage/)** — a Backstage `catalog-info.yaml` that registers
