@@ -381,3 +381,10 @@ premium-tier-build-prompt.md
 # keypairs. These are runtime output, and the .key files are private keys —
 # never commit them.
 examples/local/.state/
+
+# Artifacts the README walkthrough tells you to produce in the repo root: the
+# locally built CLI, the join bundles, and a saved snapshot. All per-run output
+# tied to one machine's clusters and keys, so they never belong in the repo.
+/dwx
+*.token
+snap.json

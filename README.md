@@ -1,16 +1,12 @@
 <div align="center">
 
+<img src="docs/images/logo.svg" height=100px/>
+
 # DataWerx Mesh
 
-**Connect any Kubernetes Service, by name, from any cluster across clouds, regions, and on-prem**
+**Call any Kubernetes Service by name from any cluster — across clouds, regions, and on-prem.**
 
-No LoadBalancer. No public IP. No central broker. No CNI lock-in.
-
-Works with Tailscale, NetBird, Cilium, WireGuard, cloud VPN
-
--or-
-
-Use our batteries-included built-in overlay
+Encrypted, broker-less, CNI-agnostic. One DaemonSet, no central control plane, no LoadBalancer, no public IP.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Free forever](https://img.shields.io/badge/core-free%20forever-brightgreen.svg)](COMMITMENT.md)
@@ -18,9 +14,16 @@ Use our batteries-included built-in overlay
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/DataWerx/datawerx-mesh/badge)](https://scorecard.dev/viewer/?uri=github.com/DataWerx/datawerx-mesh)
 [![Go 1.26](https://img.shields.io/badge/Go-1.26-00ADD8.svg)](https://go.dev)
 
+</div>
 
-<img src="docs/images/logo.svg" height=100px/>
+See it for yourself — two real clusters talking on your laptop in about five minutes:
 
+```sh
+git clone https://github.com/DataWerx/datawerx-mesh && cd datawerx-mesh
+examples/local/mesh-demo.sh all   # clusters, agent, mesh, then a Service called across them by name
+```
+
+<div align="center">
 
 [Quickstart](#quickstart-link-two-clusters-in-5-minutes) · [Try it yourself](#try-it-yourself) · [How it works](#how-it-works) · [Why it's different](#why-its-different) · [Ask an AI](#2--signal--ask-an-ai-why-the-mesh-is-unhealthy) · [Docs](docs/README.md)
 
@@ -147,29 +150,32 @@ This is the quickstart above, broken into the pieces you'll reproduce in product
 ```sh
 # Stand up the two-cluster mesh and confirm the peering converged.
 examples/local/mesh-demo.sh up
-dwx mesh verify --context kind-dwx-a            # → Mesh peers: 1 connected
-dwx mesh verify --context kind-dwx-b            # → Mesh peers: 1 connected
+./dwx mesh verify --context kind-dwx-a            # → Mesh peers: 1 connected
+./dwx mesh verify --context kind-dwx-b            # → Mesh peers: 1 connected
 
 # Export an echo Service in cluster A and call it by name from cluster B.
 examples/local/mesh-demo.sh service             # → hello from cluster A
 
 # Inspect what each cluster sees.
-dwx mesh snapshot --context kind-dwx-a | jq '.imports, .exports'
-dwx mesh graph --context kind-dwx-a --format mermaid   # paste into any Markdown viewer
+./dwx mesh snapshot --context kind-dwx-a | jq '.imports, .exports'
+./dwx mesh graph --context kind-dwx-a --format mermaid   # paste into any Markdown viewer
 ```
 
 **On your own clusters:** install the agent with Helm (below), declare each remote cluster as a `MeshPeer` — or let `dwx mesh join` mint and swap the bundles for you — then export Services with the standard `ServiceExport`. The by-hand walkthrough is **[docs/quickstart.md](docs/quickstart.md)**; production install and DNS wiring are in **[docs/cross-cluster-services.md](docs/cross-cluster-services.md)**.
 
 ```sh
 # Zero-friction peering between two real clusters — no hand-written CRDs.
-dwx mesh join export --cluster-id cluster-a --endpoint a.example.com:51820 \
+./dwx mesh join export --cluster-id cluster-a --endpoint a.example.com:51820 \
   --generate --pod-cidrs 10.244.0.0/16 --service-cidrs 10.96.0.0/16 > a.token
-dwx mesh join export --cluster-id cluster-b --endpoint b.example.com:51820 \
+./dwx mesh join export --cluster-id cluster-b --endpoint b.example.com:51820 \
   --generate --pod-cidrs 10.245.0.0/16 --service-cidrs 10.97.0.0/16 > b.token
-# Swap the tokens, then import each on the other cluster:
-dwx mesh join import --context cluster-a --bundle-file b.token
-dwx mesh join import --context cluster-b --bundle-file a.token
+# Swap the tokens, then import each on the other cluster. --context is a
+# kubeconfig context name, so use your own (e.g. kind-dwx-a in the local demo).
+./dwx mesh join import --context kind-dwx-a --bundle-file b.token
+./dwx mesh join import --context kind-dwx-b --bundle-file a.token
 ```
+
+> This block illustrates the real-world flow, so the endpoints (`a.example.com`) and the `--generate` keys are placeholders — swap in each cluster's real reachable `host:port` and the node's actual WireGuard public key. Don't paste it against the local demo mesh that `mesh-demo.sh up` already peered for you: an import upserts the peer by its cluster ID, so it would replace the working entry with an unreachable endpoint and send the peer to `Phase=Error`.
 
 ### 2 · Signal — ask an AI why the mesh is (un)healthy
 
@@ -177,16 +183,41 @@ dwx mesh join import --context cluster-b --bundle-file a.token
 
 ```sh
 # See the exact grounded evidence the model would receive — NO API key needed.
-dwx signal --print-context --context kind-dwx-a "Why can't cluster B reach echo?"
+./dwx signal --print-context --context kind-dwx-a "Why can't cluster B reach echo?"
 
 # Get an AI answer over live state (needs an Anthropic API key).
 export ANTHROPIC_API_KEY=sk-ant-...
-dwx signal --context kind-dwx-a "Which clusters are unhealthy, and what's the most likely cause?"
+./dwx signal --context kind-dwx-a "Which clusters are unhealthy, and what's the most likely cause?"
 
 # Or reason over a saved snapshot, with no cluster access at all.
-dwx mesh snapshot --context kind-dwx-a > snap.json
-dwx signal --snapshot snap.json "Explain the connectivity problem"
+./dwx mesh snapshot --context kind-dwx-a > snap.json
+./dwx signal --snapshot snap.json "Explain the connectivity problem"
 ```
+
+**Acting on what Signal finds.** If you ran the by-hand `join` block above against this demo, Signal now reports each peer in `Error` with `resolving peer endpoint … no such host` — the placeholder `a.example.com`/`b.example.com` endpoints and freshly generated keys replaced the working peers `mesh-demo.sh up` had authored. Re-author each peer with the demo's real node IP and the agent's real WireGuard public key, then confirm the mesh recovered. Every value below is read from the running demo, so this is copy-paste safe:
+
+```sh
+# The kind node IPs on the shared docker network are the reachable endpoints.
+IP_A=$(docker inspect -f '{{.NetworkSettings.Networks.kind.IPAddress}}' dwx-a-control-plane)
+IP_B=$(docker inspect -f '{{.NetworkSettings.Networks.kind.IPAddress}}' dwx-b-control-plane)
+# The agents' real public keys — the demo persists them under examples/local/.state.
+PUB_A=$(cat examples/local/.state/dwx-a.pub)
+PUB_B=$(cat examples/local/.state/dwx-b.pub)
+
+# Re-import each peer with the correct endpoint + key. Import upserts by cluster
+# ID, so this corrects the existing MeshPeer in place.
+./dwx mesh join export --cluster-id cluster-b --public-key "$PUB_B" \
+  --endpoint "$IP_B:51820" --pod-cidrs 10.245.0.0/16 --service-cidrs 10.97.0.0/16 \
+  | ./dwx mesh join import --context kind-dwx-a --bundle-file -
+./dwx mesh join export --cluster-id cluster-a --public-key "$PUB_A" \
+  --endpoint "$IP_A:51820" --pod-cidrs 10.244.0.0/16 --service-cidrs 10.96.0.0/16 \
+  | ./dwx mesh join import --context kind-dwx-b --bundle-file -
+
+# Both peers converge to Connected within a minute. Confirm with Signal:
+./dwx signal --print-context --context kind-dwx-a "Is cluster B connected now?"
+```
+
+A first cross-cluster call — `examples/local/mesh-demo.sh service` — then refreshes the idle WireGuard handshake, so the tunnel-liveness check goes green too and `dwx mesh verify` reports all checks passing.
 
 Prefer to keep an agent in the loop? The same state is exposed through a **read-only [MCP](https://modelcontextprotocol.io) server**. Point Claude Desktop or Claude Code at the cluster — no API key, no SaaS — by adding to your MCP host config:
 
@@ -239,7 +270,7 @@ A client on the overlay then routes the advertised clusterset ranges through the
 
 ### 4 · Edge — attach an edge / IoT device as a roaming peer
 
-The open core ships the `EdgeDevice` **contract** and the `dwx edge` CLI that authors it and renders a device config. This is the tier-agnostic half: you can enroll devices, scope their reach, and hand off a `wg-quick` profile today.
+The open core ships the `EdgeDevice` **contract** and the `dwx edge` CLI that authors it and renders a device config. This is the tier-agnostic half: you can enroll devices, scope their reach, and hand off a `wg-quick` profile.
 
 ```sh
 # Enroll a device (authors the free EdgeDevice CRD) and generate its keypair.
@@ -254,8 +285,19 @@ dwx edge list --context kind-dwx-a
 # Preview the object without applying it.
 dwx edge enroll --device-id field-sensor-01 --generate --dry-run
 
-# Render a wg-quick config to hand to the device. A managed terminator assigns
-# the device address; in pure open core, supply --address yourself.
+# Render a wg-quick config to hand to the device. Three values describe the
+# terminator the device dials — they come from the terminator side, not from
+# `dwx edge`:
+#   --peer-public-key  the terminator's OWN WireGuard public key — the [Peer] key
+#                      the device connects to. This is NOT the device key that
+#                      `enroll --generate` printed. A premium managed terminator
+#                      reports its key at startup (`edge terminator up
+#                      publicKey=...`) and via the control plane; on the free path
+#                      it is your BYO-overlay or gateway WireGuard endpoint's key.
+#   --endpoint         the terminator's reachable host:port (its dwx-edge0 device,
+#                      default :51821).
+#   --address          the device's /32. A managed terminator assigns it; in pure
+#                      open core supply it yourself.
 dwx edge profile --context kind-dwx-a \
   --device-id field-sensor-01 \
   --endpoint edge.example.com:51821 \
@@ -264,7 +306,9 @@ dwx edge profile --context kind-dwx-a \
   --address 100.80.0.5/32
 ```
 
-A device only **carries traffic** once an edge terminator is running. The free path to that is the **BYO-overlay + gateway** combination above. **Premium (DataWerx Edge)** provides the managed terminator that programs each device as a roaming `/32` peer, plus fleet enrollment and lifecycle — so `dwx edge profile` needs no manual `--address`. Design: **[docs/design/0013-edge-device-connector.md](docs/design/0013-edge-device-connector.md)**.
+A device only **carries traffic** once an edge terminator is running. This demo runs no terminator, so the `profile` command above just renders an illustrative config — the `--endpoint`, `--peer-public-key`, and `--address` describe a terminator that does not exist yet. `--peer-public-key` is still validated as a real WireGuard key, so to see the render in the demo pass any valid one, for example `--peer-public-key "$(wg genkey | wg pubkey)"`. The free path to a real terminator is the **BYO-overlay + gateway** combination above, where the terminator is your overlay's WireGuard endpoint and you use its public key here. **Premium (DataWerx Edge)** provides the managed terminator that programs each device as a roaming `/32` peer, plus fleet enrollment and lifecycle — so `dwx edge profile` needs no manual `--address`. Design: **[docs/design/0013-edge-device-connector.md](docs/design/0013-edge-device-connector.md)**.
+
+## Teardown
 
 When you're done, tear the lab down with `examples/local/mesh-demo.sh down`.
 
