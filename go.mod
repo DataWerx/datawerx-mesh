@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/coreos/go-iptables v0.8.0
-	github.com/go-logr/logr v1.4.3
+	github.com/go-logr/logr v1.4.4
 	github.com/miekg/dns v1.1.72
 	github.com/prometheus/client_golang v1.24.1
 	github.com/prometheus/client_model v0.6.2
